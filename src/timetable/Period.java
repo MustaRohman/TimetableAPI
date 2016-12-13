@@ -1,4 +1,4 @@
-package Timetable;
+package timetable;
 
 /**
  * Created by mustarohman on 08/12/2016.

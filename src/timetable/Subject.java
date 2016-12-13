@@ -1,4 +1,4 @@
-package Timetable;
+package timetable;
 
 import java.util.ArrayList;
 
@@ -7,17 +7,17 @@ import java.util.ArrayList;
  */
 public class Subject {
     private String name;
-    private ArrayList<Topic> topics;
+    private Topic[] topics;
     private int subjectduration;
 
 
-    public Subject(String name, int subjectduration, ArrayList<Topic> topics){
+    public Subject(String name, int subjectduration, Topic...topics){
         this.name = name;
         this.subjectduration = subjectduration;
         this.topics = topics;
     }
 
-    public ArrayList<Topic> getTopics() {
+    public Topic[] getTopics() {
         return this.topics;
     }
 

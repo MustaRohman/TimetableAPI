@@ -1,4 +1,4 @@
-package Timetable;
+package timetable;
 
 import java.util.ArrayList;
 
@@ -7,16 +7,21 @@ import java.util.ArrayList;
  */
 public class Topic {
     private String name;
-    private int subjectDuration;
+    private int topicDuration;
     private int sessionDuration;
     private ArrayList<Period> periods;
 
-    public Topic(String name,  int subjectDuration, int sessionDuration){
+    public Topic(String name, int topicDuration, int sessionDuration){
         this.name = name;
-        this.subjectDuration = subjectDuration;
+        this.topicDuration = topicDuration;
         this.sessionDuration = sessionDuration;
+
+        generatePeriods(topicDuration, sessionDuration);
+    }
+
+    public void generatePeriods(int topicDuration, int sessionDuration) {
         this.periods = new ArrayList<Period>();
-        int numOfPeriods = (int) Math.ceil(subjectDuration/sessionDuration);
+        int numOfPeriods = (int) Math.ceil(topicDuration/sessionDuration);
         for (int i = 0; i < numOfPeriods; i++ ) {
             this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, this, i));
         }

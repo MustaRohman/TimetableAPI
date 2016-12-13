@@ -5,12 +5,18 @@ package Timetable;
  */
 public class Period {
 
-    private String name;
+    public enum PERIOD_TYPE {
+        SUBJECT,
+        BREAK,
+        REWARD
+    }
+
+    private PERIOD_TYPE type;
     private Topic topic;
     private int number;
 
-    public Period(String name, Topic topic, int number){
-        this.name = name;
+    public Period(PERIOD_TYPE type, Topic topic, int number){
+        this.type = type;
         this.topic = topic;
         this.number = number;
     }

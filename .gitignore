@@ -13,6 +13,7 @@
 .idea/sqlDataSources.xml
 .idea/dynamic.xml
 .idea/uiDesigner.xml
+.idea/sonarling/
 
 # Gradle:
 .idea/gradle.xml
@@ -40,3 +41,4 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+/.idea/sonarlint/

@@ -65,7 +65,7 @@ public class Timetable {
         ArrayList<Period> periodsForDay = new ArrayList<>();
 
         for (int i = 0; i < totalPeriods; i++) {
-            System.out.println(SDF.format(currentDateTime.getTime()) + " " + currentDateTime.get(Calendar.DATE));
+            System.out.println(SDF.format(currentDateTime.getTime()) + " " + "Date: " + currentDateTime.get(Calendar.DATE));
             Subject currentSubject = subjects.get(subjectCounter);
 
             // Checks to see if assigned all periods belonging to a subject

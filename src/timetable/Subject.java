@@ -9,12 +9,14 @@ import java.util.List;
 public class Subject {
     private String name;
     private Topic[] topics;
-    private int subjectduration;
+//    private int subjectduration;
 
 
-    public Subject(String name, int subjectduration, Topic...topics){
+    public Subject(String name,
+//                   int subjectduration,
+                   Topic...topics) {
         this.name = name;
-        this.subjectduration = subjectduration;
+//        this.subjectduration = subjectduration;
         this.topics = topics;
     }
 
@@ -31,6 +33,7 @@ public class Subject {
         return subjectPeriods;
     }
 
-
-
+    public String getName() {
+        return name;
+    }
 }

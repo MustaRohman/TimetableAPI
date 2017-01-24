@@ -1,7 +1,55 @@
-//Chage to example Json input with just Subject and topic data
+//Change to example Json input with just Subject and topic data
 
 {
+  "config": {
+  },
   "subjects": [
-
+    {
+      "name": "CSL",
+      "topic-duration": 360,
+      "topics": [
+        "Logic",
+        "Trees",
+        "Logic2",
+        "Trees2",
+        "Logic3",
+        "Trees3",
+        "Logic4",
+        "Trees4",
+        "Logic5",
+        "Trees5"
+      ]
+    },
+    {
+      "name": "INS",
+      "duration": 360,
+      "topics": [
+        "IP",
+        "TCP",
+        "HTTP",
+        "XML, HTML",
+        "SOAP",
+        "Security",
+        "Virtualisation"
+      ]
+    },
+    {
+      "name": "CSL",
+      "duration": 360,
+      "topics": [
+        "Logic",
+        "Trees",
+        "Logic2",
+        "Trees2",
+        "Logic3",
+        "Trees3",
+        "Logic4",
+        "Trees4",
+        "Logic5",
+        "Trees5"
+      ]
+    }
+    {
+    }
   ]
 }

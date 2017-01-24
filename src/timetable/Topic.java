@@ -21,7 +21,7 @@ public class Topic {
 
     public void generatePeriods(int topicDuration, int sessionDuration) {
         this.periods = new ArrayList<Period>();
-        int numOfPeriods = (int) Math.ceil(topicDuration/sessionDuration);
+        int numOfPeriods = topicDuration / sessionDuration;
         for (int i = 0; i < numOfPeriods; i++ ) {
             this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, this, i, sessionDuration));
         }

@@ -44,7 +44,8 @@ public class Period {
         if (type == PERIOD_TYPE.BREAK) {
             return "BREAK";
         } else {
-            return topic.getName() + " " + number;
+            return topic.getName() + " " + "Part: " + number;
         }
     }
+
 }

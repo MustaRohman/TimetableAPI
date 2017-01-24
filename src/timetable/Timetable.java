@@ -30,10 +30,10 @@ public class Timetable {
         this.breakSize = breakSize;
         this.style = style;
 
-        generateTimetable();
+        generateTimetable(style);
     }
 
-    private void generateTimetable() {
+    private void generateTimetable(REVISION_STYLE style) {
         /**
          * Get all subjects periods
          * Create a Map
@@ -54,43 +54,48 @@ public class Timetable {
         // we rotate thru the subjects. We keep track using a counter subjectCounter
         int subjectCounter = 0;
         // Total of periods assigned for each subject
-        int[] subPeriodAssigned = new int[subjects.size()];
+        int[] totalSubPeriodsAssigned = new int[subjects.size()];
 
         int totalPeriods = getTotalPeriods();
-
-
-
         Calendar currentDateTime = startDate;
         Map<Date, ArrayList<Period>> dayPeriodsMap = new HashMap<Date, ArrayList<Period>>();
         ArrayList<Period> periodsForDay = new ArrayList<>();
 
+
         for (int i = 0; i < totalPeriods; i++) {
+            System.out.println("Period " + i + "/" + totalPeriods);
             System.out.println(SDF.format(currentDateTime.getTime()) + " " + "Date: " + currentDateTime.get(Calendar.DATE));
             Subject currentSubject = subjects.get(subjectCounter);
 
             // Checks to see if assigned all periods belonging to a subject
             // If true, then we increment the counter, thus moving on to the next subject
-            if (subPeriodAssigned[subjectCounter] >= currentSubject.getAllPeriods().size() && subjectCounter < subjects.size()) {
+            // Loop thru subjects to find one that has unassigned periods
+            while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getAllPeriods().size()) {
+                System.out.println("totalSubPeriodsAssigned[subjectCounter] " + totalSubPeriodsAssigned[subjectCounter]  + ">" +  currentSubject.getAllPeriods().size());
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
+                currentSubject = subjects.get(subjectCounter);
             }
 
 
-//            System.out.println("Subject Periods: " + currentSubject.getAllPeriods().size());
-//            System.out.println(subPeriodAssigned[subjectCounter]);
-            Period currentPeriod = currentSubject.getAllPeriods().get(subPeriodAssigned[subjectCounter]);
+            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getAllPeriods().size()) {
+                for (int j = 0; j < totalSubPeriodsAssigned.length; j++) {
+                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getAllPeriods().size());
+                }
+            }
+            Period currentPeriod = currentSubject.getAllPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
 
-            subPeriodAssigned[subjectCounter]++;
-
+            totalSubPeriodsAssigned[subjectCounter]++;
             System.out.println(currentPeriod.toString());
-
             currentDateTime.add(Calendar.MINUTE, currentPeriod.getPeriodDuration());
 
 
             if (currentDateTime.get(Calendar.HOUR_OF_DAY) >= 21) {
                 System.out.println("END OF DAY (21:00)");
-                incrementDayAndSubject(dayPeriodsMap, currentDateTime, periodsForDay, subjectCounter);
+                System.out.println("Subject " + subjectCounter + "/" + totalSubPeriodsAssigned.length +  totalSubPeriodsAssigned[subjectCounter]);
+                subjectCounter = incrementDayAndSubject(dayPeriodsMap, currentDateTime, periodsForDay, subjectCounter);
+                System.out.println(subjects.get(subjectCounter).getName());
             } else {
                 System.out.println(SDF.format(currentDateTime.getTime()));
                 Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, 0, breakSize);
@@ -102,22 +107,30 @@ public class Timetable {
         dayPeriodsAssignment = dayPeriodsMap;
     }
 
+    private void assignSEQ() {
+
+    }
+
+    private void assignALT() {
+
+    }
+
     private int getTotalPeriods() {
         int total = 0;
-        for(Subject subject: subjects) {
+        for (Subject subject : subjects) {
             total += subject.getAllPeriods().size();
         }
         return total;
     }
 
-    private void incrementDayAndSubject(Map<Date, ArrayList<Period>> dayPeriodsMap, Calendar currentDateTime, ArrayList<Period> periodsForDay, int subjectCounter) {
+    private int incrementDayAndSubject(Map<Date, ArrayList<Period>> dayPeriodsMap, Calendar currentDateTime, ArrayList<Period> periodsForDay, int subjectCounter) {
         dayPeriodsMap.put(currentDateTime.getTime(), periodsForDay);
-        periodsForDay = new ArrayList<>();
+        periodsForDay.clear();
         currentDateTime.set(Calendar.HOUR_OF_DAY, 9);
         currentDateTime.set(Calendar.MINUTE, 0);
         currentDateTime.set(Calendar.DATE, currentDateTime.get(Calendar.DATE) + 1);
-        subjectCounter = (subjectCounter + 1) % (subjects.size());
-        System.out.println(subjectCounter);
+        return (subjectCounter + 1) % (subjects.size());
+
     }
 
     public void printTimetable() {

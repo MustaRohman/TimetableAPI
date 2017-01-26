@@ -31,6 +31,10 @@ public class Period {
         return dateTime;
     }
 
+    public int getHourOfDay() {
+        return dateTime.get(Calendar.HOUR_OF_DAY);
+    }
+
     public void setDateTime(Calendar dateTime) {
         this.dateTime = dateTime;
     }
@@ -43,6 +47,8 @@ public class Period {
     public String toString() {
         if (type == PERIOD_TYPE.BREAK) {
             return "BREAK";
+        } else if(type == PERIOD_TYPE.REWARD) {
+            return "REWARD";
         } else {
             return topic.getName() + " " + "Part: " + number;
         }

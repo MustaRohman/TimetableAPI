@@ -1,17 +1,8 @@
-package main;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sun.xml.internal.bind.v2.TODO;
 import timetable.Period;
 import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;

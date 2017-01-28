@@ -1,12 +1,17 @@
+import org.junit.Assert;
 import org.junit.Test;
 import timetable.Period;
 import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by mustarohman on 26/01/2017.
@@ -57,7 +62,7 @@ public class TimetableTest {
                 new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize)));
 
         Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
-        Timetable timetable = new Timetable(subjects, rewardPeriod , startDateTime, Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        Timetable timetable = new Timetable(subjects, rewardPeriod , startDateTime, LocalDate.of(2017,1,15), Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
     }
 //
 //    @Test
@@ -79,5 +84,25 @@ public class TimetableTest {
 //        Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
 //        Timetable timetable = new Timetable(subjects, rewardPeriod , startDateTime, Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
 //    }
+
+    @Test
+    public void testSpareDays() {
+        ArrayList<Subject> subjects = new ArrayList<>();
+        subjects.add(new Subject("CIS", new Topic("RSA", 240, sessionSize), new Topic("DES", 240, sessionSize), new Topic("Diffie Hellman",
+                240, sessionSize), new Topic("Kerberos", 240, sessionSize), new Topic("Block Cipher Modes", 240, sessionSize), new Topic("Modulo", 240, sessionSize),
+                new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize)));
+        Timetable timetable = new Timetable(subjects, rewardPeriod,  startDateTime, LocalDate.of(2017, 1, 16) , Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        assertTrue(timetable.getSpareDays() > 0);
+    }
+
+    @Test
+    public void testSpareDaysFail() {
+        ArrayList<Subject> subjects = new ArrayList<>();
+        subjects.add(new Subject("CIS", new Topic("RSA", 240, sessionSize), new Topic("DES", 240, sessionSize), new Topic("Diffie Hellman",
+                240, sessionSize), new Topic("Kerberos", 240, sessionSize), new Topic("Block Cipher Modes", 240, sessionSize), new Topic("Modulo", 240, sessionSize),
+                new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize)));
+        Timetable timetable = new Timetable(subjects, rewardPeriod,  startDateTime, LocalDate.of(2016, 12, 16) , Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        assertTrue(timetable.getSpareDays() < 0);
+    }
 
 }

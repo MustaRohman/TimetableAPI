@@ -1,7 +1,11 @@
 package timetable;
 
+import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Created by mustarohman on 13/12/2016.
@@ -17,6 +21,9 @@ public class Timetable {
     private ArrayList<Subject> subjects;
     private Period rewardPeriod;
     private Calendar startDate;
+    private LocalDate examStartDate;
+    private LocalDate revisionEndDate;
+    private long spareDays;
     private REVISION_STYLE style;
     private int periodDuration;
     private int breakSize;
@@ -24,10 +31,11 @@ public class Timetable {
 
     private final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm");
 
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, REVISION_STYLE style, int periodDuration, int breakSize) {
+    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate ,REVISION_STYLE style, int periodDuration, int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDate = startDate;
+        this.examStartDate = examStartDate;
         this.periodDuration = periodDuration;
         this.breakSize = breakSize;
         this.style = style;
@@ -64,6 +72,8 @@ public class Timetable {
         ArrayList<Period> periodsForDay = new ArrayList<>();
         boolean rewardTaken = false;
 
+//        List of all periods ordered by the timetable assignment
+        Period[] orderedTimetablePeriods = new Period[totalPeriods];
 
         for (int i = 0; i < totalPeriods; i++) {
 //            System.out.println("Period " + i + "/" + totalPeriods);
@@ -79,7 +89,6 @@ public class Timetable {
                 currentSubject = subjects.get(subjectCounter);
             }
 
-
 //            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getAllPeriods().size()) {
 //                for (int j = 0; j < totalSubPeriodsAssigned.length; j++) {
 //                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getAllPeriods().size());
@@ -88,6 +97,7 @@ public class Timetable {
             Period currentPeriod = currentSubject.getAllPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
+            orderedTimetablePeriods[i] = currentPeriod;
 
             totalSubPeriodsAssigned[subjectCounter]++;
             System.out.println(currentPeriod.toString());
@@ -115,6 +125,7 @@ public class Timetable {
                 currentDateTime.add(Calendar.MINUTE, breakSize);
             }
         }
+        spareDays = calculateSpareDays(currentDateTime);
         dayPeriodsAssignment = dayPeriodsMap;
     }
 
@@ -139,7 +150,7 @@ public class Timetable {
         periodsForDay.clear();
         currentDateTime.set(Calendar.HOUR_OF_DAY, 9);
         currentDateTime.set(Calendar.MINUTE, 0);
-        currentDateTime.set(Calendar.DATE, currentDateTime.get(Calendar.DATE) + 1);
+        currentDateTime.add(Calendar.DATE, 1);
         return (subjectCounter + 1) % (subjects.size());
 
     }
@@ -152,6 +163,15 @@ public class Timetable {
         }
     }
 
+    private long calculateSpareDays(Calendar currentDateTime){
+        revisionEndDate = LocalDate.of(currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH) + 1, currentDateTime.get(Calendar.DATE));
+        long spareDays = DAYS.between(revisionEndDate, examStartDate);
+        return spareDays;
+    }
+
+    public long getSpareDays() {
+        return spareDays;
+    }
 
     public ArrayList<Subject> getSubjects() {
         return subjects;

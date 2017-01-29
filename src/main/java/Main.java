@@ -1,3 +1,5 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import timetable.Period;
 import timetable.Subject;
 import timetable.Timetable;
@@ -17,6 +19,8 @@ public class Main {
 //        TODO Timetable: add method that regenerates timetable when a period changes
 
 
+
+
         final int sessionSize = 45;
         final int breakSize = 15;
 
@@ -31,6 +35,10 @@ public class Main {
         Timetable timetable = new Timetable(subjects, rewardPeriod, startDateTime, LocalDate.of(2016, 12, 17),  Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
         System.out.println(timetable.getSpareDays());
 
+
+//        GsonBuilder builder = new GsonBuilder();
+//        Gson gson = builder.create();
+//        System.out.println(gson.toJson(timetable));
 
 //        JsonParser parser = new JsonParser();
 

@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class PeriodTest {
     final int sessionSize = 45;
     Topic topic =  new Topic("Logic", 240, sessionSize);
-    Period period = new Period(Period.PERIOD_TYPE.SUBJECT, topic ,3, sessionSize);
+    Period period = new Period(Period.PERIOD_TYPE.SUBJECT, topic.getName() ,3, sessionSize);
     Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null ,0, 15);
 
     @Test

@@ -1,6 +1,5 @@
 package timetable;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
@@ -29,7 +28,6 @@ public class Timetable {
     private int breakSize;
     private Map<Date, ArrayList<Period>> dayPeriodsAssignment;
 
-    private final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm");
 
     public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate ,REVISION_STYLE style, int periodDuration, int breakSize) {
         this.subjects = subjects;
@@ -52,7 +50,7 @@ public class Timetable {
          *
          * map =  Map<Calendar, List<Period>>
          *
-         * periods = subjects.getAllPeriods
+         * periods = subjects.getPeriods
          * currentDateTime = startDate
          *
          * periods.forEach(
@@ -60,6 +58,9 @@ public class Timetable {
          * )
          *
          */
+
+        final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm");
+
 
         // we rotate thru the subjects. We keep track using a counter subjectCounter
         int subjectCounter = 0;
@@ -83,18 +84,18 @@ public class Timetable {
             // Checks to see if assigned all periods belonging to a subject
             // If true, then we increment the counter, thus moving on to the next subject
             // Loop thru subjects to find one that has unassigned periods
-            while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getAllPeriods().size()) {
-//                System.out.println("totalSubPeriodsAssigned[subjectCounter] " + totalSubPeriodsAssigned[subjectCounter]  + ">" +  currentSubject.getAllPeriods().size());
+            while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getPeriods().size()) {
+//                System.out.println("totalSubPeriodsAssigned[subjectCounter] " + totalSubPeriodsAssigned[subjectCounter]  + ">" +  currentSubject.getPeriods().size());
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
                 currentSubject = subjects.get(subjectCounter);
             }
 
-//            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getAllPeriods().size()) {
+//            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getPeriods().size()) {
 //                for (int j = 0; j < totalSubPeriodsAssigned.length; j++) {
-//                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getAllPeriods().size());
+//                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getPeriods().size());
 //                }
 //            }
-            Period currentPeriod = currentSubject.getAllPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
+            Period currentPeriod = currentSubject.getPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
             orderedTimetablePeriods[i] = currentPeriod;
@@ -140,7 +141,7 @@ public class Timetable {
     private int getTotalPeriods() {
         int total = 0;
         for (Subject subject : subjects) {
-            total += subject.getAllPeriods().size();
+            total += subject.getPeriods().size();
         }
         return total;
     }
@@ -171,6 +172,14 @@ public class Timetable {
 
     public long getSpareDays() {
         return spareDays;
+    }
+
+    public void addBreakPeriod(Period lastCompletedPeriod, Period breakPeriod) {
+
+    }
+
+    public void addBreakDay() {
+
     }
 
     public ArrayList<Subject> getSubjects() {

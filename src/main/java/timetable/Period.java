@@ -14,14 +14,14 @@ public class Period {
     }
 
     private PERIOD_TYPE type;
-    private Topic topic;
+    private String topicName;
     private int number;
     private Calendar dateTime;
     private int periodDuration;
 
-    public Period(PERIOD_TYPE type, Topic topic, int number, int periodDuration){
+    public Period(PERIOD_TYPE type, String topicName, int number, int periodDuration){
         this.type = type;
-        this.topic = topic;
+        this.topicName = topicName;
         this.number = number;
         this.dateTime = null;
         this.periodDuration = periodDuration;
@@ -50,7 +50,7 @@ public class Period {
         } else if(type == PERIOD_TYPE.REWARD) {
             return "REWARD";
         } else {
-            return topic.getName() + " " + "Part: " + number;
+            return topicName + " " + "Part: " + number;
         }
     }
 

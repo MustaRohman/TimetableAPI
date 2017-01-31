@@ -105,4 +105,9 @@ public class TimetableTest {
         assertTrue(timetable.getSpareDays() < 0);
     }
 
+    @Test
+    public void testIncrementTimeAndSubject() {
+
+    }
+
 }

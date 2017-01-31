@@ -1,5 +1,6 @@
 package timetable;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 /**
@@ -16,8 +17,9 @@ public class Period {
     private PERIOD_TYPE type;
     private String topicName;
     private int number;
-    private Calendar dateTime;
+    private LocalDateTime dateTime;
     private int periodDuration;
+    private boolean completed;
 
     public Period(PERIOD_TYPE type, String topicName, int number, int periodDuration){
         this.type = type;
@@ -27,20 +29,28 @@ public class Period {
         this.periodDuration = periodDuration;
     }
 
-    public Calendar getDateTime() {
+    public LocalDateTime getDateTime() {
         return dateTime;
     }
 
     public int getHourOfDay() {
-        return dateTime.get(Calendar.HOUR_OF_DAY);
+        return dateTime.getHour();
     }
 
-    public void setDateTime(Calendar dateTime) {
+    public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
     }
 
     public int getPeriodDuration() {
         return periodDuration;
+    }
+
+    public void complete() {
+        completed = true;
+    }
+
+    public boolean isComplete() {
+        return completed;
     }
 
     @Override

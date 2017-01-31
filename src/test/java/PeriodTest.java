@@ -4,6 +4,7 @@ import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -20,16 +21,16 @@ public class PeriodTest {
 
     @Test
     public void testSetDateTime() {
-        Calendar dateTime = new GregorianCalendar(2017, 1, 26, 9, 0);
-        period.setDateTime(dateTime);
+        LocalDateTime dateTime = LocalDateTime.of(2017, 1, 26, 9, 0);;
+        period.setDateTime(LocalDateTime.of(2017, 1, 26, 9, 0));
         assertEquals(period.getDateTime(), dateTime);
     }
 
     @Test
     public void testSetDateTimeFalse() {
-        Calendar dateTime = new GregorianCalendar(2017, 1, 26, 9, 0);
-        period.setDateTime(dateTime);
-        assertNotEquals(period.getDateTime(), new GregorianCalendar(2017, 1, 27, 9, 0));
+        LocalDateTime dateTime = LocalDateTime.of(2017, 1, 26, 9, 0);
+        period.setDateTime(LocalDateTime.of(2017, 1, 26, 9, 0));
+        assertNotEquals(period.getDateTime(), LocalDateTime.of(2017, 1, 27, 9, 0));
     }
 
     @Test

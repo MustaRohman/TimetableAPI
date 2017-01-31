@@ -2,6 +2,7 @@ package timetable;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -26,10 +27,11 @@ public class Timetable {
     private REVISION_STYLE style;
     private int periodDuration;
     private int breakSize;
-    private Map<Date, ArrayList<Period>> dayPeriodsAssignment;
+    private Map<LocalDate, ArrayList<Period>> dayPeriodsAssignment;
+    private LocalDateTime currentDateTime;
 
 
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate ,REVISION_STYLE style, int periodDuration, int breakSize) {
+    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate, REVISION_STYLE style, int periodDuration, int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDate = startDate;
@@ -68,8 +70,9 @@ public class Timetable {
         int[] totalSubPeriodsAssigned = new int[subjects.size()];
 
         int totalPeriods = getTotalPeriods();
-        Calendar currentDateTime = startDate;
-        Map<Date, ArrayList<Period>> dayPeriodsMap = new HashMap<Date, ArrayList<Period>>();
+        currentDateTime = LocalDateTime.of(startDate.get(Calendar.YEAR), startDate.get(Calendar.MONTH), startDate.get(Calendar.DATE), startDate.get(Calendar.HOUR),
+                startDate.get(Calendar.MINUTE));
+        Map<LocalDate, ArrayList<Period>> dayPeriodsMap = new HashMap<LocalDate, ArrayList<Period>>();
         ArrayList<Period> periodsForDay = new ArrayList<>();
         boolean rewardTaken = false;
 
@@ -77,24 +80,17 @@ public class Timetable {
         Period[] orderedTimetablePeriods = new Period[totalPeriods];
 
         for (int i = 0; i < totalPeriods; i++) {
-//            System.out.println("Period " + i + "/" + totalPeriods);
-            System.out.println(SDF.format(currentDateTime.getTime()) + " " + "Date: " + currentDateTime.get(Calendar.DATE));
+            System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
             Subject currentSubject = subjects.get(subjectCounter);
 
             // Checks to see if assigned all periods belonging to a subject
             // If true, then we increment the counter, thus moving on to the next subject
             // Loop thru subjects to find one that has unassigned periods
             while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getPeriods().size()) {
-//                System.out.println("totalSubPeriodsAssigned[subjectCounter] " + totalSubPeriodsAssigned[subjectCounter]  + ">" +  currentSubject.getPeriods().size());
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
                 currentSubject = subjects.get(subjectCounter);
             }
 
-//            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getPeriods().size()) {
-//                for (int j = 0; j < totalSubPeriodsAssigned.length; j++) {
-//                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getPeriods().size());
-//                }
-//            }
             Period currentPeriod = currentSubject.getPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
@@ -102,40 +98,35 @@ public class Timetable {
 
             totalSubPeriodsAssigned[subjectCounter]++;
             System.out.println(currentPeriod.toString());
-            currentDateTime.add(Calendar.MINUTE, currentPeriod.getPeriodDuration());
+            currentDateTime = currentDateTime.plusMinutes(currentPeriod.getPeriodDuration());
+//                    add(Calendar.MINUTE, currentPeriod.getPeriodDuration());
 
-            if (currentDateTime.get(Calendar.HOUR_OF_DAY) >= 21) {
+            if (currentDateTime.getHour() >= 21) {
                 System.out.println("END OF DAY (21:00)");
                 System.out.println("Subject " + subjectCounter + "/" + totalSubPeriodsAssigned.length +  totalSubPeriodsAssigned[subjectCounter]);
                 subjectCounter = incrementDayAndSubjectCounter(dayPeriodsMap, currentDateTime, periodsForDay, subjectCounter);
                 System.out.println(subjects.get(subjectCounter).getName());
                 rewardTaken = false;
-            } else if(currentDateTime.get(Calendar.HOUR_OF_DAY) >= (13) && !rewardTaken) {
-                System.out.println(SDF.format(currentDateTime.getTime()));
+            } else if(currentDateTime.getHour() >= (13) && !rewardTaken) {
+                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 rewardPeriod.setDateTime(currentDateTime);
                 System.out.println(rewardPeriod.toString());
                 periodsForDay.add(rewardPeriod);
-                currentDateTime.add(Calendar.MINUTE, 60);
+                currentDateTime = currentDateTime.plusMinutes(60);
+//                        add(Calendar.MINUTE, 60);
                 rewardTaken = true;
             } else {
-                System.out.println(SDF.format(currentDateTime.getTime()));
+                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, 0, breakSize);
                 breakPeriod.setDateTime(currentDateTime);
                 System.out.println(breakPeriod.toString());
                 periodsForDay.add(breakPeriod);
-                currentDateTime.add(Calendar.MINUTE, breakSize);
+                currentDateTime = currentDateTime.plusMinutes(breakSize);
+//                currentDateTime.add(Calendar.MINUTE, breakSize);
             }
         }
         spareDays = calculateSpareDays(currentDateTime);
         dayPeriodsAssignment = dayPeriodsMap;
-    }
-
-    private void assignSEQ() {
-
-    }
-
-    private void assignALT() {
-
     }
 
     private int getTotalPeriods() {
@@ -146,12 +137,11 @@ public class Timetable {
         return total;
     }
 
-    private int incrementDayAndSubjectCounter(Map<Date, ArrayList<Period>> dayPeriodsMap, Calendar currentDateTime, ArrayList<Period> periodsForDay, int subjectCounter) {
-        dayPeriodsMap.put(currentDateTime.getTime(), periodsForDay);
+    private int incrementDayAndSubjectCounter(Map<LocalDate, ArrayList<Period>> dayPeriodsMap, LocalDateTime localDateTime, ArrayList<Period> periodsForDay, int subjectCounter) {
+        dayPeriodsMap.put(localDateTime.toLocalDate(), periodsForDay);
         periodsForDay.clear();
-        currentDateTime.set(Calendar.HOUR_OF_DAY, 9);
-        currentDateTime.set(Calendar.MINUTE, 0);
-        currentDateTime.add(Calendar.DATE, 1);
+        currentDateTime = LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(),
+                localDateTime.getDayOfMonth() + 1, 9, 0);
         return (subjectCounter + 1) % (subjects.size());
 
     }
@@ -164,9 +154,9 @@ public class Timetable {
         }
     }
 
-    private long calculateSpareDays(Calendar currentDateTime){
-        revisionEndDate = LocalDate.of(currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH) + 1, currentDateTime.get(Calendar.DATE));
-        long spareDays = DAYS.between(revisionEndDate, examStartDate);
+    private long calculateSpareDays(LocalDateTime currentDateTime){
+//        revisionEndDate = LocalDate.of(currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH) + 1, currentDateTime.get(Calendar.DATE));
+        long spareDays = DAYS.between(currentDateTime.toLocalDate(), examStartDate);
         return spareDays;
     }
 
@@ -174,13 +164,13 @@ public class Timetable {
         return spareDays;
     }
 
-    public void addBreakPeriod(Period lastCompletedPeriod, Period breakPeriod) {
-
-    }
-
     public void addBreakDay() {
 
     }
+
+//    private Period getLastCompletedPeriod() {
+//
+//    }
 
     public ArrayList<Subject> getSubjects() {
         return subjects;

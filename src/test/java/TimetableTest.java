@@ -6,9 +6,7 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -140,5 +138,20 @@ public class TimetableTest {
         ArrayList<Period> periods = timetable.getAssignment().get(LocalDate.of(2016, 11, 17));
         timetable.addBreakDay(LocalDate.of(2016, 11, 16));
         assertEquals(periods, timetable.getAssignment().get(LocalDate.of(2016, 11, 18)));
+    }
+
+    @Test
+    public void testOneRewardAddedToEachDay() {
+        ArrayList<Subject> subjects = new ArrayList<>();
+        subjects.add(new Subject("CIS", new Topic("RSA", 240, sessionSize), new Topic("DES", 240, sessionSize), new Topic("Diffie Hellman",
+                240, sessionSize), new Topic("Kerberos", 240, sessionSize), new Topic("Block Cipher Modes", 240, sessionSize), new Topic("Modulo", 240, sessionSize),
+                new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize)));
+        Timetable timetable = new Timetable(subjects, rewardPeriod,  startDateTime, LocalDate.of(2017, 1, 16), Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        Iterator it = timetable.getAssignment().entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            ArrayList<Period> periods = (ArrayList<Period>) pair.getValue();
+            assertTrue(Collections.frequency(periods, rewardPeriod) <= 1);
+        }
     }
 }

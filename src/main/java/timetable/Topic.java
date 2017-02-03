@@ -23,7 +23,7 @@ public class Topic {
         this.periods = new ArrayList<Period>();
         int numOfPeriods = topicDuration / sessionDuration;
         for (int i = 0; i < numOfPeriods; i++ ) {
-            this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, this, i, sessionDuration));
+            this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, name, i, sessionDuration));
         }
     }
 

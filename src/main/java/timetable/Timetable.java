@@ -1,8 +1,7 @@
 package timetable;
 
-import java.sql.Time;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -27,11 +26,11 @@ public class Timetable {
     private REVISION_STYLE style;
     private int periodDuration;
     private int breakSize;
-    private Map<Date, ArrayList<Period>> dayPeriodsAssignment;
+    private Map<LocalDate, ArrayList<Period>> timetableAssignment;
+    private LocalDateTime currentDateTime;
 
-    private final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm");
 
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate ,REVISION_STYLE style, int periodDuration, int breakSize) {
+    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate, REVISION_STYLE style, int periodDuration, int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDate = startDate;
@@ -40,137 +39,125 @@ public class Timetable {
         this.breakSize = breakSize;
         this.style = style;
 
-        generateTimetable(style);
+        timetableAssignment = generateTimetable();
     }
 
-    private void generateTimetable(REVISION_STYLE style) {
-        /*
-         * Get all subjects periods
-         * Create a Map
-         * Mapping between each day, to a list of periods assigned to that day
-         * These periods consisting initially consisting only of revision and breaks
-         *
-         * map =  Map<Calendar, List<Period>>
-         *
-         * periods = subjects.getAllPeriods
-         * currentDateTime = startDate
-         *
-         * periods.forEach(
-         *
-         * )
-         *
-         */
-
-        // we rotate thru the subjects. We keep track using a counter subjectCounter
+    private Map<LocalDate, ArrayList<Period>> generateTimetable() {
         int subjectCounter = 0;
         // Total of periods assigned for each subject
         int[] totalSubPeriodsAssigned = new int[subjects.size()];
-
         int totalPeriods = getTotalPeriods();
-        Calendar currentDateTime = startDate;
-        Map<Date, ArrayList<Period>> dayPeriodsMap = new HashMap<Date, ArrayList<Period>>();
-        ArrayList<Period> periodsForDay = new ArrayList<>();
         boolean rewardTaken = false;
+        int endHour = 21;
 
+        currentDateTime = LocalDateTime.of(startDate.get(Calendar.YEAR), startDate.get(Calendar.MONTH), startDate.get(Calendar.DATE), startDate.get(Calendar.HOUR),
+                startDate.get(Calendar.MINUTE));
+        Map assignment = Collections.synchronizedMap(new HashMap<LocalDate, ArrayList<Period>>());
+        ArrayList<Period> periodsForDay = new ArrayList<>();
 //        List of all periods ordered by the timetable assignment
         Period[] orderedTimetablePeriods = new Period[totalPeriods];
 
         for (int i = 0; i < totalPeriods; i++) {
-//            System.out.println("Period " + i + "/" + totalPeriods);
-            System.out.println(SDF.format(currentDateTime.getTime()) + " " + "Date: " + currentDateTime.get(Calendar.DATE));
+//            System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
             Subject currentSubject = subjects.get(subjectCounter);
-
             // Checks to see if assigned all periods belonging to a subject
             // If true, then we increment the counter, thus moving on to the next subject
             // Loop thru subjects to find one that has unassigned periods
-            while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getAllPeriods().size()) {
-//                System.out.println("totalSubPeriodsAssigned[subjectCounter] " + totalSubPeriodsAssigned[subjectCounter]  + ">" +  currentSubject.getAllPeriods().size());
+            while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getPeriods().size()) {
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
                 currentSubject = subjects.get(subjectCounter);
             }
 
-//            if (totalSubPeriodsAssigned[subjectCounter] < subjects.get(subjectCounter).getAllPeriods().size()) {
-//                for (int j = 0; j < totalSubPeriodsAssigned.length; j++) {
-//                    System.out.println("Value of totalSubPeriodsAssigned: " + totalSubPeriodsAssigned[j] + "/" + subjects.get(j).getAllPeriods().size());
-//                }
-//            }
-            Period currentPeriod = currentSubject.getAllPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
+            Period currentPeriod = currentSubject.getPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
             orderedTimetablePeriods[i] = currentPeriod;
 
             totalSubPeriodsAssigned[subjectCounter]++;
-            System.out.println(currentPeriod.toString());
-            currentDateTime.add(Calendar.MINUTE, currentPeriod.getPeriodDuration());
+//            System.out.println(currentPeriod.toString());
+            currentDateTime = currentDateTime.plusMinutes(currentPeriod.getPeriodDuration());
 
-            if (currentDateTime.get(Calendar.HOUR_OF_DAY) >= 21) {
-                System.out.println("END OF DAY (21:00)");
-                System.out.println("Subject " + subjectCounter + "/" + totalSubPeriodsAssigned.length +  totalSubPeriodsAssigned[subjectCounter]);
-                subjectCounter = incrementDayAndSubjectCounter(dayPeriodsMap, currentDateTime, periodsForDay, subjectCounter);
-                System.out.println(subjects.get(subjectCounter).getName());
+            if (currentDateTime.getHour() >= endHour) {
+//                System.out.println("END OF DAY (21:00)");
+//                System.out.println("Subject " + subjectCounter + "/" + totalSubPeriodsAssigned.length +  totalSubPeriodsAssigned[subjectCounter]);
+                subjectCounter = (subjectCounter + 1) % (subjects.size());
+//                System.out.println(subjects.get(subjectCounter).getName());
+                assignment.put(currentDateTime.toLocalDate(), periodsForDay);
+                currentDateTime = incrementDay(assignment, currentDateTime);
+                periodsForDay = new ArrayList<>();
                 rewardTaken = false;
-            } else if(currentDateTime.get(Calendar.HOUR_OF_DAY) >= (13) && !rewardTaken) {
-                System.out.println(SDF.format(currentDateTime.getTime()));
+            } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
+//                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 rewardPeriod.setDateTime(currentDateTime);
-                System.out.println(rewardPeriod.toString());
+//                System.out.println(rewardPeriod.toString());
                 periodsForDay.add(rewardPeriod);
-                currentDateTime.add(Calendar.MINUTE, 60);
+                currentDateTime = currentDateTime.plusMinutes(60);
                 rewardTaken = true;
-            } else {
-                System.out.println(SDF.format(currentDateTime.getTime()));
+            } else if (i != totalPeriods - 1) {
+//                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, 0, breakSize);
                 breakPeriod.setDateTime(currentDateTime);
-                System.out.println(breakPeriod.toString());
+//                System.out.println(breakPeriod.toString());
                 periodsForDay.add(breakPeriod);
-                currentDateTime.add(Calendar.MINUTE, breakSize);
+                currentDateTime = currentDateTime.plusMinutes(breakSize);
             }
         }
+        if (!periodsForDay.isEmpty() && currentDateTime.getHour() < endHour) {
+            assignment.put(currentDateTime.toLocalDate(), periodsForDay);
+        }
         spareDays = calculateSpareDays(currentDateTime);
-        dayPeriodsAssignment = dayPeriodsMap;
-    }
-
-    private void assignSEQ() {
-
-    }
-
-    private void assignALT() {
-
+        return assignment;
     }
 
     private int getTotalPeriods() {
         int total = 0;
         for (Subject subject : subjects) {
-            total += subject.getAllPeriods().size();
+            total += subject.getPeriods().size();
         }
         return total;
     }
 
-    private int incrementDayAndSubjectCounter(Map<Date, ArrayList<Period>> dayPeriodsMap, Calendar currentDateTime, ArrayList<Period> periodsForDay, int subjectCounter) {
-        dayPeriodsMap.put(currentDateTime.getTime(), periodsForDay);
-        periodsForDay.clear();
-        currentDateTime.set(Calendar.HOUR_OF_DAY, 9);
-        currentDateTime.set(Calendar.MINUTE, 0);
-        currentDateTime.add(Calendar.DATE, 1);
-        return (subjectCounter + 1) % (subjects.size());
-
+    private LocalDateTime incrementDay(Map<LocalDate, ArrayList<Period>> dayPeriodsMap, LocalDateTime localDateTime) {
+//        System.out.println(localDateTime.toLocalDate().toString() + " " + dayPeriodsMap.get(localDateTime.toLocalDate()));
+        return LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth() + 1, 9, 0);
     }
 
     public void printTimetable() {
-        Iterator it = dayPeriodsAssignment.entrySet().iterator();
+        Iterator it = timetableAssignment.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
 
         }
     }
 
-    private long calculateSpareDays(Calendar currentDateTime){
-        revisionEndDate = LocalDate.of(currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH) + 1, currentDateTime.get(Calendar.DATE));
-        long spareDays = DAYS.between(revisionEndDate, examStartDate);
+    private long calculateSpareDays(LocalDateTime currentDateTime){
+        long spareDays = DAYS.between(currentDateTime.toLocalDate(), examStartDate);
         return spareDays;
     }
 
     public long getSpareDays() {
         return spareDays;
+    }
+
+    public boolean addBreakDay(LocalDate localDate) {
+        if (!timetableAssignment.containsKey(localDate) && spareDays <= 0) {
+           return false;
+        }
+        ArrayList<Period> breakDay = new ArrayList<>();
+        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+        ArrayList<Period> periods = timetableAssignment.replace(localDate, breakDay);
+        LocalDate date = localDate.plusDays(1);
+
+        while (timetableAssignment.containsKey(date)) {
+            periods = timetableAssignment.replace(date, periods);
+            date = date.plusDays(1);
+        }
+
+        return true;
+    }
+
+    public Map<LocalDate, ArrayList<Period>> getAssignment() {
+        return timetableAssignment;
     }
 
     public ArrayList<Subject> getSubjects() {

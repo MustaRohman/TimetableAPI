@@ -1,5 +1,6 @@
 package timetable;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 /**
@@ -10,32 +11,34 @@ public class Period {
     public enum PERIOD_TYPE {
         SUBJECT,
         BREAK,
-        REWARD
+        REWARD,
+        BREAK_DAY
     }
 
     private PERIOD_TYPE type;
-    private Topic topic;
+    private String topicName;
     private int number;
-    private Calendar dateTime;
+    private LocalDateTime dateTime;
     private int periodDuration;
+    private boolean completed;
 
-    public Period(PERIOD_TYPE type, Topic topic, int number, int periodDuration){
+    public Period(PERIOD_TYPE type, String topicName, int number, int periodDuration){
         this.type = type;
-        this.topic = topic;
+        this.topicName = topicName;
         this.number = number;
         this.dateTime = null;
         this.periodDuration = periodDuration;
     }
 
-    public Calendar getDateTime() {
+    public LocalDateTime getDateTime() {
         return dateTime;
     }
 
     public int getHourOfDay() {
-        return dateTime.get(Calendar.HOUR_OF_DAY);
+        return dateTime.getHour();
     }
 
-    public void setDateTime(Calendar dateTime) {
+    public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
     }
 
@@ -43,15 +46,26 @@ public class Period {
         return periodDuration;
     }
 
+    public void complete() {
+        completed = true;
+    }
+
+    public boolean isComplete() {
+        return completed;
+    }
+
     @Override
     public String toString() {
-        if (type == PERIOD_TYPE.BREAK) {
-            return "BREAK";
-        } else if(type == PERIOD_TYPE.REWARD) {
-            return "REWARD";
-        } else {
-            return topic.getName() + " " + "Part: " + number;
+        switch (type) {
+            case SUBJECT: return topicName + " " + "Part: " + number;
+            case BREAK: return "BREAK";
+            case REWARD: return "REWARD";
+            case BREAK_DAY: return "BREAK DAY";
+            default: return null;
         }
     }
 
+    public PERIOD_TYPE getType() {
+        return type;
+    }
 }

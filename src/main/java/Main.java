@@ -34,13 +34,6 @@ public class Main {
         Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
 
         Timetable timetable = new Timetable(subjects, rewardPeriod, startDateTime, LocalDate.of(2017, 1, 17),  Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
-        System.out.println(timetable.getSpareDays());
 
-
-        Iterator it = timetable.getAssignment().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            System.out.println(pair.getKey() + ": " + pair.getValue());
-        }
     }
 }

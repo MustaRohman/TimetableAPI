@@ -71,7 +71,6 @@ public class Timetable {
             Period currentPeriod = currentSubject.getPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
-            System.out.println(currentPeriod.toString() + " added");
             orderedTimetablePeriods[i] = currentPeriod;
 
             totalSubPeriodsAssigned[subjectCounter]++;
@@ -140,8 +139,21 @@ public class Timetable {
         return spareDays;
     }
 
-    public void addBreakDay() {
+    public boolean addBreakDay(LocalDate localDate) {
+        if (!timetableAssignment.containsKey(localDate) && spareDays <= 0) {
+           return false;
+        }
+        ArrayList<Period> breakDay = new ArrayList<>();
+        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+        ArrayList<Period> periods = timetableAssignment.replace(localDate, breakDay);
+        LocalDate date = localDate.plusDays(1);
 
+        while (timetableAssignment.containsKey(date)) {
+            periods = timetableAssignment.replace(date, periods);
+            date = date.plusDays(1);
+        }
+
+        return true;
     }
 
     public Map<LocalDate, ArrayList<Period>> getAssignment() {

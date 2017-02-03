@@ -11,7 +11,8 @@ public class Period {
     public enum PERIOD_TYPE {
         SUBJECT,
         BREAK,
-        REWARD
+        REWARD,
+        BREAK_DAY
     }
 
     private PERIOD_TYPE type;
@@ -55,13 +56,16 @@ public class Period {
 
     @Override
     public String toString() {
-        if (type == PERIOD_TYPE.BREAK) {
-            return "BREAK";
-        } else if(type == PERIOD_TYPE.REWARD) {
-            return "REWARD";
-        } else {
-            return topicName + " " + "Part: " + number;
+        switch (type) {
+            case SUBJECT: return topicName + " " + "Part: " + number;
+            case BREAK: return "BREAK";
+            case REWARD: return "REWARD";
+            case BREAK_DAY: return "BREAK DAY";
+            default: return null;
         }
     }
 
+    public PERIOD_TYPE getType() {
+        return type;
+    }
 }

@@ -154,4 +154,14 @@ public class TimetableTest {
             assertTrue(Collections.frequency(periods, rewardPeriod) <= 1);
         }
     }
+
+    @Test
+    public void testUniqueDayAssignment() {
+        ArrayList<Subject> subjects = new ArrayList<>();
+        subjects.add(new Subject("CIS", new Topic("RSA", 240, sessionSize), new Topic("DES", 240, sessionSize), new Topic("Diffie Hellman",
+                240, sessionSize), new Topic("Kerberos", 240, sessionSize), new Topic("Block Cipher Modes", 240, sessionSize), new Topic("Modulo", 240, sessionSize),
+                new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize)));
+        Timetable timetable = new Timetable(subjects, rewardPeriod,  startDateTime, LocalDate.of(2017, 1, 16), Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        assertEquals(timetable.getAssignment().values().stream().distinct().count(), timetable.getAssignment().size());
+    }
 }

@@ -1,5 +1,6 @@
 package timetable;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -58,7 +59,6 @@ public class Timetable {
         Period[] orderedTimetablePeriods = new Period[totalPeriods];
 
         for (int i = 0; i < totalPeriods; i++) {
-//            System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
             Subject currentSubject = subjects.get(subjectCounter);
             // Checks to see if assigned all periods belonging to a subject
             // If true, then we increment the counter, thus moving on to the next subject
@@ -74,30 +74,22 @@ public class Timetable {
             orderedTimetablePeriods[i] = currentPeriod;
 
             totalSubPeriodsAssigned[subjectCounter]++;
-//            System.out.println(currentPeriod.toString());
             currentDateTime = currentDateTime.plusMinutes(currentPeriod.getPeriodDuration());
 
             if (currentDateTime.getHour() >= endHour) {
-//                System.out.println("END OF DAY (21:00)");
-//                System.out.println("Subject " + subjectCounter + "/" + totalSubPeriodsAssigned.length +  totalSubPeriodsAssigned[subjectCounter]);
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
-//                System.out.println(subjects.get(subjectCounter).getName());
                 assignment.put(currentDateTime.toLocalDate(), periodsForDay);
                 currentDateTime = incrementDay(assignment, currentDateTime);
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
             } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
-//                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 rewardPeriod.setDateTime(currentDateTime);
-//                System.out.println(rewardPeriod.toString());
                 periodsForDay.add(rewardPeriod);
                 currentDateTime = currentDateTime.plusMinutes(60);
                 rewardTaken = true;
             } else if (i != totalPeriods - 1) {
-//                System.out.println(currentDateTime.toLocalDate().toString() + " " + currentDateTime.toLocalTime().toString());
                 Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, 0, breakSize);
                 breakPeriod.setDateTime(currentDateTime);
-//                System.out.println(breakPeriod.toString());
                 periodsForDay.add(breakPeriod);
                 currentDateTime = currentDateTime.plusMinutes(breakSize);
             }
@@ -105,6 +97,7 @@ public class Timetable {
         if (!periodsForDay.isEmpty() && currentDateTime.getHour() < endHour) {
             assignment.put(currentDateTime.toLocalDate(), periodsForDay);
         }
+        revisionEndDate = currentDateTime.toLocalDate();
         spareDays = calculateSpareDays(currentDateTime);
         return assignment;
     }
@@ -118,21 +111,15 @@ public class Timetable {
     }
 
     private LocalDateTime incrementDay(Map<LocalDate, ArrayList<Period>> dayPeriodsMap, LocalDateTime localDateTime) {
-//        System.out.println(localDateTime.toLocalDate().toString() + " " + dayPeriodsMap.get(localDateTime.toLocalDate()));
-        return LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth() + 1, 9, 0);
-    }
-
-    public void printTimetable() {
-        Iterator it = timetableAssignment.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-
+        try {
+            return LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth() + 1, 9, 0);
+        } catch (DateTimeException e) {
+            return LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth().getValue() + 1, 1, 9, 0);
         }
     }
 
     private long calculateSpareDays(LocalDateTime currentDateTime){
-        long spareDays = DAYS.between(currentDateTime.toLocalDate(), examStartDate);
-        return spareDays;
+        return DAYS.between(revisionEndDate, examStartDate);
     }
 
     public long getSpareDays() {

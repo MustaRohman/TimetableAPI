@@ -18,6 +18,8 @@ public class PeriodTest {
     Topic topic =  new Topic("Logic", 240, sessionSize);
     Period period = new Period(Period.PERIOD_TYPE.SUBJECT, topic.getName() ,3, sessionSize);
     Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null ,0, 15);
+    Period breakDay = new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500);
+    Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
 
     @Test
     public void testSetDateTime() {
@@ -41,10 +43,9 @@ public class PeriodTest {
     @Test
     public void testToStringSubject() {
         assertEquals("Logic Part: 3", period.toString());
-    }
-
-    @Test
-    public void testToStringBreak() {
         assertEquals("BREAK", breakPeriod.toString());
+        assertEquals("BREAK DAY", breakDay.toString());
+        assertEquals("REWARD", rewardPeriod.toString());
+
     }
 }

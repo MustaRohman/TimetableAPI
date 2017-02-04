@@ -2,6 +2,7 @@ package timetable;
 
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.StringJoiner;
 
 /**
  * Created by mustarohman on 08/12/2016.
@@ -34,8 +35,8 @@ public class Period {
         return dateTime;
     }
 
-    public int getHourOfDay() {
-        return dateTime.getHour();
+    public String getTopicName() {
+        return topicName;
     }
 
     public void setDateTime(LocalDateTime dateTime) {

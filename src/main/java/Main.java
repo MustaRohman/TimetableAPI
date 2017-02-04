@@ -11,12 +11,6 @@ public class Main {
 
     public static void main(String[] args) {
 
-//        TODO add exam date as input, calculate spare days
-//        TODO Timetable: add method that regenerates timetable when a period changes
-
-
-
-
         final int sessionSize = 45;
         final int breakSize = 15;
 

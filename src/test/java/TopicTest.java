@@ -22,8 +22,4 @@ public class TopicTest {
             assertEquals(period.getTopicName(), topic.getName());
         }
     }
-
-    @Test
-    public void testSomething() {
-    }
 }

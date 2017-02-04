@@ -13,14 +13,10 @@ public class Subject {
 //    private int subjectduration;
 
 
-    public Subject(String name,
-//                   int subjectduration,
-                   Topic...topics) {
+    public Subject(String name, Topic...topics) {
         this.name = name;
-//        this.subjectduration = subjectduration;
         this.topics = topics;
         periods = getAllPeriods();
-
     }
 
     public Topic[] getTopics() {
@@ -35,7 +31,7 @@ public class Subject {
         return subjectPeriods;
     }
 
-    public List<Period> getPeriods() {
+    public ArrayList<Period> getPeriods() {
         return periods;
     }
 

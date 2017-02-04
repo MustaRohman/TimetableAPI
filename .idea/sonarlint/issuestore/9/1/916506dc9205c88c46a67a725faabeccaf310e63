@@ -1,0 +1,9 @@
+
+>squid:S1068")Remove this unused "style" private field.(‡Â‹È
+…squid:S1319"pThe return type of this method should be an interface such as "List" rather than the implementation "ArrayList".(ÄèÅ‡
+squid:S1319"sThe type of the "subjects" object should be an interface such as "List" rather than the implementation "ArrayList".(‚³éÛüÿÿÿÿ
+Ksquid:S1172"6Remove this unused method parameter "currentDateTime".(‘ÅÓÕ
+ssquid:S1450"^Remove the "currentDateTime" field and declare it as a local variable in the relevant methods.(ç÷”ƒ
+:squid:S1166"%Either log or rethrow this exception.(Ÿ…¬É
+Isquid:S1172"4Remove this unused method parameter "dayPeriodsMap".(ÊËô’
+Gsquid:S1068"2Remove this unused "periodDuration" private field.(¨ñúı

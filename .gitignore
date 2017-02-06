@@ -152,6 +152,9 @@ $RECYCLE.BIN/
 .gradle
 /build/
 
+.idea/sonarlint/
+
+
 # Ignore Gradle GUI config
 gradle-app.setting
 

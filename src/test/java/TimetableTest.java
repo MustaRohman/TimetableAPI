@@ -16,11 +16,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class TimetableTest {
 
-    final int sessionSize = 45;
-    final int breakSize = 15;
-    Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
+    private final int sessionSize = 45;
+    private final int breakSize = 15;
+    private Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
 
-    Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
+    private Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
 
     @Test
     public void oneSubject() {

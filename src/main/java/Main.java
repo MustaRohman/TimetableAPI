@@ -27,6 +27,6 @@ public class Main {
 
         Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
 
-        Timetable timetable = new Timetable(subjects, rewardPeriod, startDateTime, LocalDate.of(2017, 1, 17),  Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        Timetable timetable = new Timetable(subjects, rewardPeriod, startDateTime, LocalDate.of(2017, 1, 17), sessionSize, breakSize);
     }
 }

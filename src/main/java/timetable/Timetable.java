@@ -1,5 +1,6 @@
 package timetable;
 
+import java.sql.Time;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class Timetable {
     private LocalDateTime currentDateTime;
 
 
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate, REVISION_STYLE style, int periodDuration, int breakSize) {
+    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate, int periodDuration, int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDate = startDate;
@@ -150,5 +151,47 @@ public class Timetable {
     public ArrayList<Subject> getSubjects() {
         return subjects;
     }
+
+    public class TimetableBuilder {
+        private ArrayList<Subject> nestedSubjects;
+        private Period nestedRewardPeriod;
+        private LocalDate nestedStartDate;
+        private LocalDate nestedExamDate;
+        private int nestedPeriodDuration;
+        private int nestedBreakDuration;
+
+        public TimetableBuilder() {
+
+        }
+
+        public TimetableBuilder addSubjects(ArrayList<Subject> nestedSubjects) {
+            this.nestedSubjects = nestedSubjects;
+            return this;
+        }
+
+        public TimetableBuilder addRewardPeriod(Period nestedRewardPeriod) {
+            this.nestedRewardPeriod = nestedRewardPeriod;
+            return this;
+        }
+
+        public TimetableBuilder addStartDate(LocalDate nestedStartDate) {
+            this.nestedStartDate = nestedStartDate;
+            return this;
+        }
+
+        public TimetableBuilder addExamDate(LocalDate nestedExamDate) {
+            this.nestedExamDate= nestedExamDate;
+            return this;
+        }
+
+        public TimetableBuilder addPeriodDuration(int periodDuration) {
+            this.nestedPeriodDuration = periodDuration;
+            return this;
+        }
+
+        public TimetableBuilder addBreakDuration(int breakDuration) {
+            this.nestedBreakDuration = breakDuration;
+            return this;
+        }
 
 }

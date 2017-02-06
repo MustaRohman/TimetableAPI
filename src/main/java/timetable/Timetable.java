@@ -1,6 +1,5 @@
 package timetable;
 
-import java.sql.Time;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class Timetable {
 
     private ArrayList<Subject> subjects;
     private Period rewardPeriod;
-    private Calendar startDate;
+    private LocalDateTime startDateTime;
     private LocalDate examStartDate;
     private LocalDate revisionEndDate;
     private long spareDays;
@@ -32,10 +31,10 @@ public class Timetable {
     private LocalDateTime currentDateTime;
 
 
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod ,Calendar startDate, LocalDate examStartDate, int periodDuration, int breakSize) {
+    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod , LocalDateTime startDateTime, LocalDate examStartDate, int periodDuration, int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
-        this.startDate = startDate;
+        this.startDateTime = startDateTime;
         this.examStartDate = examStartDate;
         this.periodDuration = periodDuration;
         this.breakSize = breakSize;
@@ -52,8 +51,7 @@ public class Timetable {
         boolean rewardTaken = false;
         int endHour = 21;
 
-        currentDateTime = LocalDateTime.of(startDate.get(Calendar.YEAR), startDate.get(Calendar.MONTH), startDate.get(Calendar.DATE), startDate.get(Calendar.HOUR),
-                startDate.get(Calendar.MINUTE));
+        currentDateTime = startDateTime;
         Map assignment = Collections.synchronizedMap(new HashMap<LocalDate, ArrayList<Period>>());
         ArrayList<Period> periodsForDay = new ArrayList<>();
 //        List of all periods ordered by the timetable assignment
@@ -155,7 +153,7 @@ public class Timetable {
     public class TimetableBuilder {
         private ArrayList<Subject> nestedSubjects;
         private Period nestedRewardPeriod;
-        private LocalDate nestedStartDate;
+        private LocalDateTime nestedStartDateTime;
         private LocalDate nestedExamDate;
         private int nestedPeriodDuration;
         private int nestedBreakDuration;
@@ -174,8 +172,8 @@ public class Timetable {
             return this;
         }
 
-        public TimetableBuilder addStartDate(LocalDate nestedStartDate) {
-            this.nestedStartDate = nestedStartDate;
+        public TimetableBuilder addStartDate(LocalDateTime nestedStartDate) {
+            this.nestedStartDateTime = nestedStartDate;
             return this;
         }
 
@@ -193,5 +191,10 @@ public class Timetable {
             this.nestedBreakDuration = breakDuration;
             return this;
         }
+
+        public Timetable createTimetable() {
+            return new Timetable(nestedSubjects, nestedRewardPeriod, nestedStartDateTime, nestedExamDate, nestedPeriodDuration, nestedBreakDuration);
+        }
+    }
 
 }

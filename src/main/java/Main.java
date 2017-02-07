@@ -5,6 +5,7 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class Main {
@@ -27,6 +28,6 @@ public class Main {
 
         Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
 
-        Timetable timetable = new Timetable(subjects, rewardPeriod, startDateTime, LocalDate.of(2017, 1, 17),  Timetable.REVISION_STYLE.SEQ, sessionSize, breakSize);
+        Timetable timetable = new Timetable(subjects, rewardPeriod, LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 17), sessionSize, breakSize);
     }
 }

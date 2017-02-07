@@ -97,7 +97,7 @@ public class Timetable {
             assignment.put(currentDateTime.toLocalDate(), periodsForDay);
         }
         revisionEndDate = currentDateTime.toLocalDate();
-        spareDays = calculateSpareDays(currentDateTime);
+        spareDays = calculateSpareDays(revisionEndDate);
         return assignment;
     }
 
@@ -117,7 +117,7 @@ public class Timetable {
         }
     }
 
-    private long calculateSpareDays(LocalDateTime currentDateTime){
+    private long calculateSpareDays(LocalDate revisionEndDate){
         return DAYS.between(revisionEndDate, examStartDate);
     }
 

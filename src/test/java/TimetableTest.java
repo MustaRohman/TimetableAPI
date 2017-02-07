@@ -39,7 +39,14 @@ public class TimetableTest {
     public void oneSubject() {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
     }
 
     @Test
@@ -50,7 +57,14 @@ public class TimetableTest {
         subjects.add(cisSubject);
         subjects.add(insSubject);
         Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
-        Timetable timetable = new Timetable(subjects, rewardPeriod, LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
     }
 
     @Test
@@ -62,7 +76,14 @@ public class TimetableTest {
         subjects.add(cisSubject);
 
         Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
-        Timetable timetable = new Timetable(subjects, rewardPeriod , LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017,1,15), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
     }
 
     @Test
@@ -75,14 +96,28 @@ public class TimetableTest {
         subjects.add(cisSubject);
 
         Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
-        Timetable timetable = new Timetable(subjects, rewardPeriod , LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
     }
 
     @Test
     public void testSpareDays() {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
         assertTrue(timetable.getSpareDays() > 0);
     }
 
@@ -90,8 +125,15 @@ public class TimetableTest {
     public void testSpareDaysFail() {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 11, 17, 9, 0), LocalDate.of(2016, 12, 16) , sessionSize, breakSize);
-        assertFalse(timetable.getSpareDays() < 0);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 17, 9, 0))
+                .addExamDate(LocalDate.of(2016, 12, 18))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
+        assertTrue(timetable.getSpareDays() <= 0);
     }
 
     @Test
@@ -105,8 +147,14 @@ public class TimetableTest {
         subjects.add(cslSubject);
         subjects.add(insSubject);
         subjects.add(cisSubject);
-
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2016, 12, 16) , sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 10, 17))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
         timetable.addBreakDay(LocalDate.of(2016, 12, 16));
         ArrayList<Period> periods = timetable.getAssignment().get(LocalDate.of(2016, 12, 16));
         assertEquals(periods.get(0).getType(), Period.PERIOD_TYPE.BREAK_DAY);
@@ -117,7 +165,14 @@ public class TimetableTest {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cslSubject);
         subjects.add(insSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2016, 12, 16) , sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2016, 12, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
 
         ArrayList<Period> periods = timetable.getAssignment().get(LocalDate.of(2016, 11, 17));
         timetable.addBreakDay(LocalDate.of(2016, 11, 16));
@@ -128,7 +183,14 @@ public class TimetableTest {
     public void testOneRewardAddedToEachDay() {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16),  sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
         Iterator it = timetable.getAssignment().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
@@ -141,7 +203,14 @@ public class TimetableTest {
     public void testUniqueDayAssignment() {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
-        Timetable timetable = new Timetable(subjects, rewardPeriod,  LocalDateTime.of(2016, 12, 15, 9, 0), LocalDate.of(2017, 1, 16), sessionSize, breakSize);
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2017, 1, 16))
+                .addPeriodDuration(sessionSize)
+                .addBreakDuration(breakSize)
+                .createTimetable();
         assertEquals(timetable.getAssignment().values().stream().distinct().count(), timetable.getAssignment().size());
     }
 }

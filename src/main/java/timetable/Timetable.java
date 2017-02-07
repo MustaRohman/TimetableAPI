@@ -126,7 +126,7 @@ public class Timetable {
     }
 
     public boolean addBreakDay(LocalDate localDate) {
-        if (!timetableAssignment.containsKey(localDate) && spareDays <= 0) {
+        if (!timetableAssignment.containsKey(localDate) || spareDays <= 0) {
            return false;
         }
         ArrayList<Period> breakDay = new ArrayList<>();
@@ -150,7 +150,7 @@ public class Timetable {
         return subjects;
     }
 
-    public class TimetableBuilder {
+    public static class TimetableBuilder {
         private ArrayList<Subject> nestedSubjects;
         private Period nestedRewardPeriod;
         private LocalDateTime nestedStartDateTime;

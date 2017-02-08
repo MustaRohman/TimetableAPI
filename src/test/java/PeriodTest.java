@@ -1,8 +1,12 @@
 import org.junit.Test;
 import timetable.Period;
+import timetable.Subject;
+import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import static org.junit.Assert.*;
 

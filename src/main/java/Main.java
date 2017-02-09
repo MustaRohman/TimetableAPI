@@ -64,11 +64,10 @@ public class Main {
                 return res.status();
             }
             JsonElement input = new JsonParser().parse(req.body());
-            JsonObject reqJsonObj = input.getAsJsonObject();
 
             final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-            LocalDate localDate = LocalDate.parse(req.params(":date"), dtf);
+            LocalDate localDate = LocalDate.parse(req.params(":date"));
             Timetable timetable = gson.fromJson(req.body(), Timetable.class);
             timetable.addBreakDay(localDate);
             res.type("application/json");

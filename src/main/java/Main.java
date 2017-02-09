@@ -1,3 +1,4 @@
+import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.*;
 import spark.Spark;
 import timetable.Period;
@@ -5,7 +6,10 @@ import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
+import java.lang.reflect.Type;
+import java.sql.Time;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import static spark.Spark.*;
@@ -23,36 +27,27 @@ public class Main {
             exception.printStackTrace();
         });
 
-        Period period = new Period(Period.PERIOD_TYPE.SUBJECT, "TEST" ,3, 45);
-        Gson gson = new Gson();
-        get("/hello", (req, res) -> {
-            res.type("application/json");
-            return gson.toJson(period);
-        });
-        post("/test", (req, res) -> {
-            return gson.toJson(period);
-        });
+        final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
-        post("/timetable", (req, res) -> {
+        post("/create", (req, res) -> {
             if (!"application/json".equals(req.contentType())) {
                 res.status(400);
                 return res.status();
             }
             JsonElement input = new JsonParser().parse(req.body());
             JsonObject reqJsonObj = input.getAsJsonObject();
-
             if (!reqJsonObj.has("config") || !reqJsonObj.has("subjects")) {
                 res.status(400);
                 return res.status();
             }
-//
+
             JsonObject configJsonObj = reqJsonObj.getAsJsonObject("config");
             JsonArray subjectsJsonArray = reqJsonObj.getAsJsonArray("subjects");
-
             if (subjectsJsonArray.size() == 0) {
                 res.status(400);
                 return res.status();
             }
+
             Timetable timetable = createTimetable(configJsonObj, subjectsJsonArray);
             if (timetable == null) {
                 res.status(400);
@@ -60,8 +55,26 @@ public class Main {
             }
 
             res.type("application/json");
-            return gson.toJson(timetable.getAssignment());
+            return gson.toJson(timetable);
         });
+
+        post("/break/:date", (req, res) -> {
+            if (!"application/json".equals(req.contentType())) {
+                res.status(400);
+                return res.status();
+            }
+            JsonElement input = new JsonParser().parse(req.body());
+            JsonObject reqJsonObj = input.getAsJsonObject();
+
+            final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+            LocalDate localDate = LocalDate.parse(req.params(":date"), dtf);
+            Timetable timetable = gson.fromJson(req.body(), Timetable.class);
+            timetable.addBreakDay(localDate);
+            res.type("application/json");
+            return gson.toJson(timetable);
+
+        }) ;
     }
 
     private static boolean jsonObjHasProps (JsonObject jsonObject, OBJECT_TYPE type) {
@@ -119,7 +132,6 @@ public class Main {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(revisionStartDate.atTime(9, 0))
                 .addExamDate(examStartDate)
-                .addPeriodDuration(sessionDuration)
                 .addBreakDuration(breakDuration)
                 .createTimetable();
     }

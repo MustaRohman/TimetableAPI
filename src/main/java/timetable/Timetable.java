@@ -13,30 +13,20 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 public class Timetable {
 
-    public enum REVISION_STYLE {
-        ALT,
-        SEQ
-    }
-
-    private ArrayList<Subject> subjects;
-    private Period rewardPeriod;
-    private LocalDateTime startDateTime;
+    private transient ArrayList<Subject> subjects;
+    private transient Period rewardPeriod;
+    private transient LocalDateTime startDateTime;
     private LocalDate examStartDate;
     private LocalDate revisionEndDate;
     private long spareDays;
-    private REVISION_STYLE style;
-    private int periodDuration;
-    private int breakSize;
+    private transient int breakSize;
     private Map<LocalDate, ArrayList<Period>> timetableAssignment;
-    private LocalDateTime currentDateTime;
 
-
-    public Timetable(ArrayList<Subject> subjects, Period rewardPeriod , LocalDateTime startDateTime, LocalDate examStartDate, int periodDuration, int breakSize) {
+    private Timetable(ArrayList<Subject> subjects, Period rewardPeriod , LocalDateTime startDateTime, LocalDate examStartDate,  int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDateTime = startDateTime;
         this.examStartDate = examStartDate;
-        this.periodDuration = periodDuration;
         this.breakSize = breakSize;
 
         timetableAssignment = generateTimetable();
@@ -50,7 +40,7 @@ public class Timetable {
         boolean rewardTaken = false;
         int endHour = 21;
 
-        currentDateTime = startDateTime;
+        LocalDateTime currentDateTime = startDateTime;
         Map assignment = Collections.synchronizedMap(new HashMap<LocalDate, ArrayList<Period>>());
         ArrayList<Period> periodsForDay = new ArrayList<>();
 //        List of all periods ordered by the timetable assignment
@@ -77,7 +67,7 @@ public class Timetable {
             if (currentDateTime.getHour() >= endHour) {
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
                 assignment.put(currentDateTime.toLocalDate(), periodsForDay);
-                currentDateTime = incrementDay(assignment, currentDateTime);
+                currentDateTime = incrementDay(currentDateTime);
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
             } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
@@ -96,7 +86,7 @@ public class Timetable {
             assignment.put(currentDateTime.toLocalDate(), periodsForDay);
         }
         revisionEndDate = currentDateTime.toLocalDate();
-        spareDays = calculateSpareDays(revisionEndDate);
+        spareDays = calculateSpareDays(revisionEndDate, examStartDate);
         return assignment;
     }
 
@@ -108,7 +98,7 @@ public class Timetable {
         return total;
     }
 
-    private LocalDateTime incrementDay(Map<LocalDate, ArrayList<Period>> dayPeriodsMap, LocalDateTime localDateTime) {
+    private LocalDateTime incrementDay(LocalDateTime localDateTime) {
         try {
             return LocalDateTime.of(localDateTime.getYear(), localDateTime.getMonth(), localDateTime.getDayOfMonth() + 1, 9, 0);
         } catch (DateTimeException e) {
@@ -116,7 +106,7 @@ public class Timetable {
         }
     }
 
-    private long calculateSpareDays(LocalDate revisionEndDate){
+    private long calculateSpareDays(LocalDate revisionEndDate, LocalDate examStartDate){
         return DAYS.between(revisionEndDate, examStartDate);
     }
 
@@ -124,19 +114,28 @@ public class Timetable {
         return spareDays;
     }
 
-    public boolean addBreakDay(LocalDate localDate) {
-        if (!timetableAssignment.containsKey(localDate) || spareDays <= 0) {
+    public boolean addBreakDay(LocalDate breakDate) {
+        if (!timetableAssignment.containsKey(breakDate) || spareDays <= 0) {
            return false;
         }
         ArrayList<Period> breakDay = new ArrayList<>();
         breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
-        ArrayList<Period> periods = timetableAssignment.replace(localDate, breakDay);
-        LocalDate date = localDate.plusDays(1);
+        ArrayList<Period> periods = timetableAssignment.replace(breakDate, breakDay);
+        LocalDate date = breakDate.plusDays(1);
+        for (Period period: periods) {
+            period.setDateTime(period.getDateTime().plusDays(1));
+        }
 
         while (timetableAssignment.containsKey(date)) {
             periods = timetableAssignment.replace(date, periods);
+            for (Period period: periods) {
+                period.setDateTime(period.getDateTime().plusDays(1));
+            }
             date = date.plusDays(1);
         }
+
+        spareDays--;
+        revisionEndDate.plusDays(1);
 
         return true;
     }
@@ -181,18 +180,13 @@ public class Timetable {
             return this;
         }
 
-        public TimetableBuilder addPeriodDuration(int periodDuration) {
-            this.nestedPeriodDuration = periodDuration;
-            return this;
-        }
-
         public TimetableBuilder addBreakDuration(int breakDuration) {
             this.nestedBreakDuration = breakDuration;
             return this;
         }
 
         public Timetable createTimetable() {
-            return new Timetable(nestedSubjects, nestedRewardPeriod, nestedStartDateTime, nestedExamDate, nestedPeriodDuration, nestedBreakDuration);
+            return new Timetable(nestedSubjects, nestedRewardPeriod, nestedStartDateTime, nestedExamDate, nestedBreakDuration);
         }
     }
 

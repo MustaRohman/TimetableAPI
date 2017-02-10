@@ -29,6 +29,8 @@ public class Main {
 
         final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
+        get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
+
         post("/create", (req, res) -> {
             if (!"application/json".equals(req.contentType())) {
                 res.status(400);

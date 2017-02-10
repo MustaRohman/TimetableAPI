@@ -63,16 +63,16 @@ public class Main {
                 res.status(400);
                 return res.status();
             }
-            JsonElement input = new JsonParser().parse(req.body());
-
-            final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
 
             LocalDate localDate = LocalDate.parse(req.params(":date"));
             Timetable timetable = gson.fromJson(req.body(), Timetable.class);
-            timetable.addBreakDay(localDate);
-            res.type("application/json");
-            return gson.toJson(timetable);
+            if (timetable.addBreakDay(localDate)) {
+                res.type("application/json");
+                return gson.toJson(timetable);
+            }
 
+            res.status(400);
+            return res.status();
         }) ;
     }
 

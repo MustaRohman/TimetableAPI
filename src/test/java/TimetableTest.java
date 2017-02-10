@@ -44,7 +44,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
     }
@@ -62,7 +61,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
     }
@@ -81,7 +79,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
     }
@@ -101,7 +98,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
     }
@@ -115,7 +111,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
         assertTrue(timetable.getSpareDays() > 0);
@@ -130,7 +125,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 17, 9, 0))
                 .addExamDate(LocalDate.of(2016, 12, 18))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
         assertTrue(timetable.getSpareDays() <= 0);
@@ -152,7 +146,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 10, 17))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
         timetable.addBreakDay(LocalDate.of(2016, 12, 16));
@@ -170,7 +163,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2016, 12, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
 
@@ -188,7 +180,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
         Iterator it = timetable.getAssignment().entrySet().iterator();
@@ -208,7 +199,6 @@ public class TimetableTest {
                 .addRewardPeriod(rewardPeriod)
                 .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
                 .addExamDate(LocalDate.of(2017, 1, 16))
-                .addPeriodDuration(sessionSize)
                 .addBreakDuration(breakSize)
                 .createTimetable();
         assertEquals(timetable.getAssignment().values().stream().distinct().count(), timetable.getAssignment().size());

@@ -21,7 +21,7 @@ public class Period {
     private int number;
     private LocalDateTime dateTime;
     private int periodDuration;
-    private boolean completed;
+    private transient boolean completed;
 
     public Period(PERIOD_TYPE type, String topicName, int number, int periodDuration){
         this.type = type;

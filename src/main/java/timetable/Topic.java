@@ -7,15 +7,10 @@ import java.util.ArrayList;
  */
 public class Topic {
     private String name;
-    private int topicDuration;
-    private int sessionDuration;
     private ArrayList<Period> periods;
 
     public Topic(String name, int topicDuration, int sessionDuration){
         this.name = name;
-        this.topicDuration = topicDuration;
-        this.sessionDuration = sessionDuration;
-
         generatePeriods(topicDuration, sessionDuration);
     }
 

@@ -18,6 +18,7 @@ import timetable.Topic;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -45,7 +46,7 @@ public class Main {
 
         post("/login", (req, res) -> {
             createUsersTable();
-            String userId = req.headers("Id");
+            String userId = req.headers("UserId");
             if (checkUser(userId)) addUser(userId);
             res.status(200);
             return res.status();
@@ -53,6 +54,7 @@ public class Main {
 
         post("/create", (req, res) -> {
             String userId = req.headers("UserId");
+
             if (!"application/json".equals(req.contentType())) {
                 res.status(400);
                 return res.status();
@@ -76,11 +78,16 @@ public class Main {
                 res.status(400);
                 return res.status();
             }
-//            Table table = TimetableTable.createTimetablesTable(dynamoDB);
-//            if (table != null) {
-//                TimetableTable.addItem(dynamoDB, userId, timetable);
-//            }
+            TimetableTable.deleteTimetablesTable(dynamoDB);
+            Table table = TimetableTable.createTimetablesTable(dynamoDB);
+            if (table != null) {
+                TimetableTable.addItem(dynamoDB, userId, timetable);
+            }
             res.type("application/json");
+            Item item = TimetableTable.getItem(dynamoDB, userId, configJsonObj.get("name").getAsString());
+
+            System.out.println(item);
+            Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(item.getJSON("Assignment"), Map.class);
             return gson.toJson(timetable);
         });
 

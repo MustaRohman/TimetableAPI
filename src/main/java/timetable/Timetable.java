@@ -20,9 +20,6 @@ public class Timetable {
     private LocalDate revisionEndDate;
     private long spareDays;
     private int breakSize;
-
-
-
     private Map<LocalDate, ArrayList<Period>> timetableAssignment;
     private String name;
 

@@ -1,23 +1,35 @@
 package database;
 
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import timetable.Timetable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Created by mustarohman on 18/03/2017.
  */
 public class TimetableTable {
 
-    static String tableName = "Timetables";
+    private final static String TABLE_NAME = "Timetables";
+    private final static String USER_ID_ATTR = "UserId";
+    private final static String NAME_ATTR = "Name";
+    private final static String SUBJECTS_ATTR = "Subjects";
+    private final static String REWARD_ATTR = "Reward";
+    private final static String START_DATE_TIME_ATTR = "StartDateTime";
+    private final static String EXAM_START_DATE_ATTR = "ExamStartDate";
+    private final static String REVISION_END_DATE_ATTR = "RevisionEndDate";
+    private final static String SPARE_DAYS_ATTR = "SpareDays";
+    private final static String BREAK_SIZE_ATTR = "BreakSize";
+    private final static String ASSIGNMENT_ATTR= "Assignment";
+
     static final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
 
@@ -25,10 +37,9 @@ public class TimetableTable {
         Table table = null;
         try {
             System.out.println("Attempting to create table; please wait...");
-            table = dynamoDB.createTable(tableName,
+            table = dynamoDB.createTable(TABLE_NAME,
                     Arrays.asList(
-                            new KeySchemaElement("UserId", KeyType.HASH), //Partition key
-                            new KeySchemaElement("Name", KeyType.RANGE)), //Sort Key
+                            new KeySchemaElement(USER_ID_ATTR, KeyType.HASH)), //Partition key
                     Arrays.asList(
                             new AttributeDefinition("UserId", ScalarAttributeType.S),
                             new AttributeDefinition("Name", ScalarAttributeType.S)),
@@ -48,16 +59,16 @@ public class TimetableTable {
         }
     }
 
-    public static Item getItem(DynamoDB dynamoDB, String userId, String name) {
-        Table table = dynamoDB.getTable(tableName);
-        Item item = table.getItem("UserId", userId, "Name", name);
+    public static Item getItem(DynamoDB dynamoDB, String userId) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        Item item = table.getItem("UserId", userId);
         return item;
     }
 
     public static void deleteTimetablesTable(DynamoDB dynamoDB) {
-        Table table = dynamoDB.getTable(tableName);
-        table.delete();
+        Table table = dynamoDB.getTable(TABLE_NAME);
         try {
+            table.delete();
             table.waitForDelete();
         } catch (InterruptedException e) {
             System.out.println("Unable to delete Timetables table");
@@ -65,28 +76,57 @@ public class TimetableTable {
         }
     }
 
-    public static void addItem(DynamoDB dynamoDB, String userId, Timetable timetable) {
+    public static Item addItem(DynamoDB dynamoDB, String userId, Timetable timetable) {
         Table table = dynamoDB.getTable("Timetables");
         try {
             System.out.println("Adding a new item...");
             PutItemOutcome outcome = table.putItem(new Item()
-                    .withPrimaryKey("UserId", userId, "Name", timetable.getName())
-                    .withJSON("Subjects", gson.toJson(timetable.getSubjects()))
-                    .withJSON("Reward",  gson.toJson(timetable.getRewardPeriod()))
-                    .with("StartDateTime", timetable.getStartDateTime().toString())
-                    .with("ExamStartDate", timetable.getExamStartDate().toString())
-                    .with("RevisionEndDate", timetable.getRevisionEndDate().toString())
-                    .withLong("SpareDays", timetable.getSpareDays())
-                    .withInt("BreakSize", timetable.getBreakSize())
-                    .withJSON("Assignment", gson.toJson(timetable.getTimetableAssignment()))
+                    .withPrimaryKey(USER_ID_ATTR, userId)
+                    .withString(NAME_ATTR, timetable.getName())
+                    .withJSON(SUBJECTS_ATTR, gson.toJson(timetable.getSubjects()))
+                    .withJSON(REWARD_ATTR,  gson.toJson(timetable.getRewardPeriod()))
+                    .with(START_DATE_TIME_ATTR, timetable.getStartDateTime().toString())
+                    .with(EXAM_START_DATE_ATTR, timetable.getExamStartDate().toString())
+                    .with(REVISION_END_DATE_ATTR, timetable.getRevisionEndDate().toString())
+                    .withLong(SPARE_DAYS_ATTR, timetable.getExtraDays())
+                    .withInt(BREAK_SIZE_ATTR, timetable.getBreakSize())
+                    .withJSON(ASSIGNMENT_ATTR, gson.toJson(timetable.getTimetableAssignment()))
             );
 
             System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
-            Item item = table.getItem("UserId", userId, "Name", timetable.getName());
+            return table.getItem(USER_ID_ATTR, userId, NAME_ATTR, timetable.getName());
 
         } catch (Exception e) {
             System.err.println("Unable to add item: " + " id: " + userId);
             System.err.println(e.getMessage());
+            return null;
         }
     }
+
+    public static ArrayList<String> getTimetableList(DynamoDB dynamoDB, String userId) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        // Query table with user id for all timetables
+        QuerySpec spec = new QuerySpec()
+                .withKeyConditionExpression(USER_ID_ATTR + "= :v_id")
+                .withValueMap(new ValueMap()
+                        .withString(":v_id", userId));
+
+        ItemCollection<QueryOutcome> items = table.query(spec);
+        ArrayList<String> list = new ArrayList<>();
+
+        Iterator<Item> iterator = items.iterator();
+        Item item = null;
+        while (iterator.hasNext()) {
+            item = iterator.next();
+            list.add(item.getString(NAME_ATTR));
+        }
+        return list;
+    }
+
+//    public static Map<LocalDate, ArrayList<Period>> getTimetableAssignment(DynamoDB dynamoDB, String userId) {
+//        Table table = dynamoDB.getTable(TABLE_NAME);
+//        Item item = getItem(dynamoDB, userId);
+//        item.get
+//
+//    }
 }

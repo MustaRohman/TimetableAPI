@@ -13,12 +13,29 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 public class Timetable {
 
-    private  ArrayList<Subject> subjects;
-    private  Period rewardPeriod;
+    private transient ArrayList<Subject> subjects;
+    private transient Period rewardPeriod;
     private  LocalDateTime startDateTime;
     private LocalDate examStartDate;
     private LocalDate revisionEndDate;
-    private long spareDays;
+
+    public void setExamStartDate(LocalDate examStartDate) {
+        this.examStartDate = examStartDate;
+    }
+
+    public void setRevisionEndDate(LocalDate revisionEndDate) {
+        this.revisionEndDate = revisionEndDate;
+    }
+
+    public void setExtraDays(long extraDays) {
+        this.extraDays = extraDays;
+    }
+
+    public void setTimetableAssignment(Map<LocalDate, ArrayList<Period>> timetableAssignment) {
+        this.timetableAssignment = timetableAssignment;
+    }
+
+    private long extraDays;
     private int breakSize;
     private Map<LocalDate, ArrayList<Period>> timetableAssignment;
     private String name;
@@ -83,7 +100,7 @@ public class Timetable {
             assignment.put(currentDateTime.toLocalDate(), periodsForDay);
         }
         revisionEndDate = currentDateTime.toLocalDate();
-        spareDays = calculateSpareDays(revisionEndDate, examStartDate);
+        extraDays = calculateSpareDays(revisionEndDate, examStartDate);
         return assignment;
     }
 
@@ -107,13 +124,17 @@ public class Timetable {
         return DAYS.between(revisionEndDate, examStartDate);
     }
 
-    public long getSpareDays() {
-        return spareDays;
+    public long getExtraDays() {
+        return extraDays;
     }
 
-    public boolean addBreakDay(LocalDate breakDate) {
-        if (!timetableAssignment.containsKey(breakDate) || spareDays <= 0) {
-           return false;
+    public static Timetable addBreakDay(LocalDate breakDate, Timetable timetable) {
+        Map<LocalDate, ArrayList<Period>> timetableAssignment = timetable.getTimetableAssignment();
+        long extraDays = timetable.getExtraDays();
+        LocalDate revisionEndDate = timetable.getRevisionEndDate();
+        if (!timetableAssignment.containsKey(breakDate) || extraDays <= 0) {
+            System.out.println(extraDays);
+           return null;
         }
         ArrayList<Period> breakDay = new ArrayList<>();
         breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
@@ -131,10 +152,13 @@ public class Timetable {
             date = date.plusDays(1);
         }
 
-        spareDays--;
+        extraDays--;
         revisionEndDate.plusDays(1);
 
-        return true;
+        timetable.setExtraDays(extraDays);
+        timetable.setRevisionEndDate(revisionEndDate);
+
+        return timetable;
     }
 
     public Map<LocalDate, ArrayList<Period>> getAssignment() {

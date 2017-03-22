@@ -15,6 +15,7 @@ import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
+import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +44,46 @@ public class Main {
         final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
         get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
+
+
+        get("/list", (req, res) -> {
+            String userId = req.headers("UserId");
+            if (userId == null) {
+                res.status(400);
+                return res.status();
+            }
+            ArrayList<String> list = TimetableTable.getTimetableList(dynamoDB, userId);
+            res.type("application/json");
+            return gson.toJson(list);
+        });
+
+        get("/agenda/day/:date", (req, res) -> {
+            String userId = req.headers("UserId");
+            String dateParam = req.params("date");
+            LocalDate date = LocalDate.parse(dateParam);
+            return null;
+        });
+
+        get("/agenda/week/:date", (req, res) -> {
+            String userId = req.headers("UserId");
+            return null;
+        });
+
+        get("/free", (req, res) -> {
+            // Number of free days available
+            String userId = req.headers("UserId");
+            return null;
+        });
+
+        get("/progress/subject/:subject", (req, res) -> {
+            String userId = req.headers("UserId");
+            return null;
+        });
+
+        get("/progress/revision", (req, res) -> {
+            String userId = req.headers("UserId");
+            return null;
+        });
 
         post("/login", (req, res) -> {
             createUsersTable();
@@ -78,35 +119,52 @@ public class Main {
                 res.status(400);
                 return res.status();
             }
-            TimetableTable.deleteTimetablesTable(dynamoDB);
+//            TimetableTable.deleteTimetablesTable(dynamoDB);
             Table table = TimetableTable.createTimetablesTable(dynamoDB);
             if (table != null) {
                 TimetableTable.addItem(dynamoDB, userId, timetable);
             }
             res.type("application/json");
-            Item item = TimetableTable.getItem(dynamoDB, userId, configJsonObj.get("name").getAsString());
+            Item item = TimetableTable.getItem(dynamoDB, userId);
 
             System.out.println(item);
-            Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(item.getJSON("Assignment"), Map.class);
-            return gson.toJson(timetable);
+            return item.getJSON("Assignment");
         });
 
         post("/break/:date", (req, res) -> {
+            System.out.println("Adding break day...");
+            String userId = req.headers("UserId");
+            if (userId == null) {
+                System.out.println("UserId is null");
+                res.status(400);
+                return res.status();
+            }
             if (!"application/json".equals(req.contentType())) {
+                System.out.println();
                 res.status(400);
                 return res.status();
             }
 
             LocalDate localDate = LocalDate.parse(req.params(":date"));
             Timetable timetable = gson.fromJson(req.body(), Timetable.class);
-            if (timetable.addBreakDay(localDate)) {
+            timetable = Timetable.addBreakDay(localDate, timetable);
+            if (timetable != null) {
+                System.out.println("Timetable is not null");
                 res.type("application/json");
                 return gson.toJson(timetable);
             }
 
+            System.out.println("Timetable is null");
             res.status(400);
             return res.status();
         }) ;
+
+        post("/extra/:subject", (req, res) -> {
+            // Assign extra day to a particular subject/topic
+            String userId = req.headers("UserId");
+            return null;
+        });
+
     }
 
 
@@ -180,7 +238,6 @@ public class Main {
         }
         return 4567; //return default port if heroku-port isn't set (i.e. on localhost)
     }
-
 
     private static void createUsersTable() {
         String tableName = "Users";

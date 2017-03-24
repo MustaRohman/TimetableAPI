@@ -16,6 +16,7 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.*;
 
 import static spark.Spark.*;
@@ -69,16 +70,21 @@ public class Main {
             return gson.toJson(agenda);
         });
 
-        get("/agenda/week/:date", (req, res) -> {
+        get("/agenda/week/:week", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the week
             String userId = req.headers("UserId");
-            return null;
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+//            2015-W49
+            String week = req.params("week");
+            ArrayList<String> agenda = getAgendaForWeek(assignment, week);
+            res.type("application/json");
+            return gson.toJson(agenda);
         });
 
         get("/free", (req, res) -> {
             // Number of free days available
             String userId = req.headers("UserId");
-            return null;
+            return TimetableTable.getFreeDays(dynamoDB, userId);
         });
 
         get("/progress/subject/:subject", (req, res) -> {
@@ -171,6 +177,27 @@ public class Main {
             return null;
         });
 
+    }
+
+    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
+        String[] split = weekNumber.split("-");
+        int year = Integer.parseInt(split[0]);
+        int week = Integer.parseInt(split[1].substring(1));
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        LocalDate ldt = LocalDate.now()
+                .withYear(year)
+                .with(weekFields.weekOfYear(), week)
+                .with(weekFields.dayOfWeek(), 1);
+        ArrayList<String> topicsAgenda = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            System.out.println(ldt.toString());
+            ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
+            if (dayAgenda != null) {
+                topicsAgenda.addAll(dayAgenda);
+            }
+            ldt = ldt.plusDays(1);
+        }
+        return topicsAgenda;
     }
 
     private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {

@@ -32,7 +32,7 @@ public class TimetableTable {
     private final static String START_DATE_TIME_ATTR = "StartDateTime";
     private final static String EXAM_START_DATE_ATTR = "ExamStartDate";
     private final static String REVISION_END_DATE_ATTR = "RevisionEndDate";
-    private final static String SPARE_DAYS_ATTR = "SpareDays";
+    private final static String SPARE_DAYS_ATTR = "ExtraDays";
     private final static String BREAK_SIZE_ATTR = "BreakSize";
     private final static String ASSIGNMENT_ATTR= "Assignment";
 
@@ -135,5 +135,11 @@ public class TimetableTable {
         String json = item.getJSON(ASSIGNMENT_ATTR);
         Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
         return gson.fromJson(json, type);
+    }
+
+    public static int getFreeDays(DynamoDB dynamoDB, String userId) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        Item item = getItem(dynamoDB, userId);
+        return item.getInt(SPARE_DAYS_ATTR);
     }
 }

@@ -16,9 +16,11 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
+import static java.time.temporal.ChronoUnit.DAYS;
 import static spark.Spark.*;
 
 public class Main {
@@ -92,9 +94,21 @@ public class Main {
             return null;
         });
 
-        get("/progress/revision", (req, res) -> {
+        get("/progress/revision/:date", (req, res) -> {
             String userId = req.headers("UserId");
-            return null;
+            LocalDate date = LocalDate.parse(req.params("date"));
+            LocalDate[] startAndEndDates = TimetableTable.getStartAndEndDates(dynamoDB, userId);
+            long length = DAYS.between(startAndEndDates[0], startAndEndDates[1]);
+            long progress = DAYS.between(startAndEndDates[0], date);
+            if (progress < 0) {
+                res.status(400);
+                return "Invalid Date";
+            }
+            System.out.println("Progress: " + progress);
+            System.out.println("Length: " + length);
+            float perc = 100 * progress/length;
+            System.out.println(perc);
+            return perc;
         });
 
         post("/login", (req, res) -> {
@@ -206,9 +220,7 @@ public class Main {
         if (periodsForDay == null || periodsForDay.isEmpty()) {
             return null;
         }
-//        periodsForDay.stream().filter(period -> !topicsAgenda.contains(period.getTopicName())).forEach(period -> {
-//            topicsAgenda.add(period.getTopicName());
-//        });
+
         for (Period period: periodsForDay) {
             if (!topicsAgenda.contains(period.getTopicName()) && period.getTopicName() != null) {
                 topicsAgenda.add(period.getTopicName());

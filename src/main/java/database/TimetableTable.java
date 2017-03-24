@@ -14,6 +14,7 @@ import timetable.Timetable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -90,8 +91,8 @@ public class TimetableTable {
                     .withString(NAME_ATTR, timetable.getName())
                     .withJSON(SUBJECTS_ATTR, gson.toJson(timetable.getSubjects()))
                     .withJSON(REWARD_ATTR,  gson.toJson(timetable.getRewardPeriod()))
-                    .with(START_DATE_TIME_ATTR, timetable.getStartDateTime().toString())
-                    .with(EXAM_START_DATE_ATTR, timetable.getExamStartDate().toString())
+                    .withJSON(START_DATE_TIME_ATTR, gson.toJson(timetable.getStartDateTime()))
+                    .withJSON(EXAM_START_DATE_ATTR, gson.toJson(timetable.getExamStartDate()))
                     .with(REVISION_END_DATE_ATTR, timetable.getRevisionEndDate().toString())
                     .withLong(SPARE_DAYS_ATTR, timetable.getExtraDays())
                     .withInt(BREAK_SIZE_ATTR, timetable.getBreakSize())
@@ -138,8 +139,18 @@ public class TimetableTable {
     }
 
     public static int getFreeDays(DynamoDB dynamoDB, String userId) {
-        Table table = dynamoDB.getTable(TABLE_NAME);
         Item item = getItem(dynamoDB, userId);
         return item.getInt(SPARE_DAYS_ATTR);
+    }
+
+    public static LocalDate[] getStartAndEndDates(DynamoDB dynamoDB, String userId) {
+        Item item = getItem(dynamoDB, userId);
+        LocalDate[] startAndEndDates = new LocalDate[2];
+        String startJson = item.getJSON(START_DATE_TIME_ATTR);
+        String endJson = item.getJSON(REVISION_END_DATE_ATTR);
+        LocalDateTime ldt = gson.fromJson(startJson, LocalDateTime.class);
+        startAndEndDates[0] = ldt.toLocalDate();
+        startAndEndDates[1] = gson.fromJson(endJson, LocalDate.class);
+        return startAndEndDates;
     }
 }

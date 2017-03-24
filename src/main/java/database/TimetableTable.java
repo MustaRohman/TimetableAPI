@@ -7,11 +7,17 @@ import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import timetable.Period;
 import timetable.Timetable;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by mustarohman on 18/03/2017.
@@ -41,8 +47,7 @@ public class TimetableTable {
                     Arrays.asList(
                             new KeySchemaElement(USER_ID_ATTR, KeyType.HASH)), //Partition key
                     Arrays.asList(
-                            new AttributeDefinition("UserId", ScalarAttributeType.S),
-                            new AttributeDefinition("Name", ScalarAttributeType.S)),
+                            new AttributeDefinition("UserId", ScalarAttributeType.S)),
                     new ProvisionedThroughput(10L, 10L));
             table.waitForActive();
             System.out.println("Success.  Table status: " + table.getDescription().getTableStatus());
@@ -61,7 +66,7 @@ public class TimetableTable {
 
     public static Item getItem(DynamoDB dynamoDB, String userId) {
         Table table = dynamoDB.getTable(TABLE_NAME);
-        Item item = table.getItem("UserId", userId);
+        Item item = table.getItem(USER_ID_ATTR, userId);
         return item;
     }
 
@@ -94,7 +99,7 @@ public class TimetableTable {
             );
 
             System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
-            return table.getItem(USER_ID_ATTR, userId, NAME_ATTR, timetable.getName());
+            return table.getItem(USER_ID_ATTR, userId);
 
         } catch (Exception e) {
             System.err.println("Unable to add item: " + " id: " + userId);
@@ -123,10 +128,12 @@ public class TimetableTable {
         return list;
     }
 
-//    public static Map<LocalDate, ArrayList<Period>> getTimetableAssignment(DynamoDB dynamoDB, String userId) {
-//        Table table = dynamoDB.getTable(TABLE_NAME);
-//        Item item = getItem(dynamoDB, userId);
-//        item.get
-//
-//    }
+
+    public static Map<LocalDate, ArrayList<Period>> getTimetableAssignment(DynamoDB dynamoDB, String userId) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        Item item = getItem(dynamoDB, userId);
+        String json = item.getJSON(ASSIGNMENT_ATTR);
+        Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
+        return gson.fromJson(json, type);
+    }
 }

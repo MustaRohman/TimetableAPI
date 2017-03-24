@@ -15,11 +15,8 @@ import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
-import java.lang.reflect.Array;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 import static spark.Spark.*;
 
@@ -58,13 +55,22 @@ public class Main {
         });
 
         get("/agenda/day/:date", (req, res) -> {
+            // Returns Subjects and their topics that are assigned to the day
             String userId = req.headers("UserId");
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
-            return null;
+            ArrayList<String> agenda = getAgendaForDay(assignment, date);
+            if (agenda == null || agenda.isEmpty()) {
+                res.status(400);
+                return res.status();
+            }
+            res.type("application/json");
+            return gson.toJson(agenda);
         });
 
         get("/agenda/week/:date", (req, res) -> {
+            // Returns Subjects and their topics that are assigned to the week
             String userId = req.headers("UserId");
             return null;
         });
@@ -121,11 +127,11 @@ public class Main {
             }
 //            TimetableTable.deleteTimetablesTable(dynamoDB);
             Table table = TimetableTable.createTimetablesTable(dynamoDB);
+            Item item = null;
             if (table != null) {
-                TimetableTable.addItem(dynamoDB, userId, timetable);
+                item = TimetableTable.addItem(dynamoDB, userId, timetable);
             }
             res.type("application/json");
-            Item item = TimetableTable.getItem(dynamoDB, userId);
 
             System.out.println(item);
             return item.getJSON("Assignment");
@@ -167,6 +173,22 @@ public class Main {
 
     }
 
+    private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {
+        ArrayList<Period> periodsForDay = assignment.get(date);
+        ArrayList<String> topicsAgenda = new ArrayList<>();
+        if (periodsForDay == null || periodsForDay.isEmpty()) {
+            return null;
+        }
+//        periodsForDay.stream().filter(period -> !topicsAgenda.contains(period.getTopicName())).forEach(period -> {
+//            topicsAgenda.add(period.getTopicName());
+//        });
+        for (Period period: periodsForDay) {
+            if (!topicsAgenda.contains(period.getTopicName()) && period.getTopicName() != null) {
+                topicsAgenda.add(period.getTopicName());
+            }
+        }
+        return topicsAgenda;
+    }
 
 
     private static boolean jsonObjHasProps (JsonObject jsonObject, OBJECT_TYPE type) {

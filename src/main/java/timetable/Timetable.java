@@ -19,22 +19,6 @@ public class Timetable {
     private LocalDate examStartDate;
     private LocalDate revisionEndDate;
 
-    public void setExamStartDate(LocalDate examStartDate) {
-        this.examStartDate = examStartDate;
-    }
-
-    public void setRevisionEndDate(LocalDate revisionEndDate) {
-        this.revisionEndDate = revisionEndDate;
-    }
-
-    public void setExtraDays(long extraDays) {
-        this.extraDays = extraDays;
-    }
-
-    public void setTimetableAssignment(Map<LocalDate, ArrayList<Period>> timetableAssignment) {
-        this.timetableAssignment = timetableAssignment;
-    }
-
     private long extraDays;
     private int breakSize;
     private Map<LocalDate, ArrayList<Period>> timetableAssignment;
@@ -195,6 +179,22 @@ public class Timetable {
 
     public String getName() {
         return name;
+    }
+
+    public void setExamStartDate(LocalDate examStartDate) {
+        this.examStartDate = examStartDate;
+    }
+
+    public void setRevisionEndDate(LocalDate revisionEndDate) {
+        this.revisionEndDate = revisionEndDate;
+    }
+
+    public void setExtraDays(long extraDays) {
+        this.extraDays = extraDays;
+    }
+
+    public void setTimetableAssignment(Map<LocalDate, ArrayList<Period>> timetableAssignment) {
+        this.timetableAssignment = timetableAssignment;
     }
 
     public static class TimetableBuilder {

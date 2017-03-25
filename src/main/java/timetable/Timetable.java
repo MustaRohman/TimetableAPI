@@ -15,19 +15,22 @@ public class Timetable {
 
     private transient ArrayList<Subject> subjects;
     private transient Period rewardPeriod;
-    private transient LocalDateTime startDateTime;
+    private  LocalDateTime startDateTime;
     private LocalDate examStartDate;
     private LocalDate revisionEndDate;
-    private long spareDays;
-    private transient int breakSize;
-    private Map<LocalDate, ArrayList<Period>> timetableAssignment;
 
-    private Timetable(ArrayList<Subject> subjects, Period rewardPeriod , LocalDateTime startDateTime, LocalDate examStartDate,  int breakSize) {
+    private long extraDays;
+    private int breakSize;
+    private Map<LocalDate, ArrayList<Period>> timetableAssignment;
+    private String name;
+
+    private Timetable(String name, ArrayList<Subject> subjects, Period rewardPeriod , LocalDateTime startDateTime, LocalDate examStartDate,  int breakSize) {
         this.subjects = subjects;
         this.rewardPeriod = rewardPeriod;
         this.startDateTime = startDateTime;
         this.examStartDate = examStartDate;
         this.breakSize = breakSize;
+        this.name = name;
 
         timetableAssignment = generateTimetable();
     }
@@ -44,13 +47,9 @@ public class Timetable {
         Map assignment = Collections.synchronizedMap(new HashMap<LocalDate, ArrayList<Period>>());
         ArrayList<Period> periodsForDay = new ArrayList<>();
 //        List of all periods ordered by the timetable assignment
-        Period[] orderedTimetablePeriods = new Period[totalPeriods];
 
         for (int i = 0; i < totalPeriods; i++) {
             Subject currentSubject = subjects.get(subjectCounter);
-            // Checks to see if assigned all periods belonging to a subject
-            // If true, then we increment the counter, thus moving on to the next subject
-            // Loop thru subjects to find one that has unassigned periods
             while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getPeriods().size()) {
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
                 currentSubject = subjects.get(subjectCounter);
@@ -59,7 +58,6 @@ public class Timetable {
             Period currentPeriod = currentSubject.getPeriods().get(totalSubPeriodsAssigned[subjectCounter]);
             currentPeriod.setDateTime(currentDateTime);
             periodsForDay.add(currentPeriod);
-            orderedTimetablePeriods[i] = currentPeriod;
 
             totalSubPeriodsAssigned[subjectCounter]++;
             currentDateTime = currentDateTime.plusMinutes(currentPeriod.getPeriodDuration());
@@ -71,6 +69,7 @@ public class Timetable {
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
             } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
+                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, rewardPeriod.getPeriodDuration());
                 rewardPeriod.setDateTime(currentDateTime);
                 periodsForDay.add(rewardPeriod);
                 currentDateTime = currentDateTime.plusMinutes(60);
@@ -86,7 +85,7 @@ public class Timetable {
             assignment.put(currentDateTime.toLocalDate(), periodsForDay);
         }
         revisionEndDate = currentDateTime.toLocalDate();
-        spareDays = calculateSpareDays(revisionEndDate, examStartDate);
+        extraDays = calculateSpareDays(revisionEndDate, examStartDate);
         return assignment;
     }
 
@@ -110,35 +109,42 @@ public class Timetable {
         return DAYS.between(revisionEndDate, examStartDate);
     }
 
-    public long getSpareDays() {
-        return spareDays;
+    public long getExtraDays() {
+        return extraDays;
     }
 
-    public boolean addBreakDay(LocalDate breakDate) {
-        if (!timetableAssignment.containsKey(breakDate) || spareDays <= 0) {
-           return false;
-        }
-        ArrayList<Period> breakDay = new ArrayList<>();
-        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
-        ArrayList<Period> periods = timetableAssignment.replace(breakDate, breakDay);
-        LocalDate date = breakDate.plusDays(1);
-        for (Period period: periods) {
-            period.setDateTime(period.getDateTime().plusDays(1));
-        }
-
-        while (timetableAssignment.containsKey(date)) {
-            periods = timetableAssignment.replace(date, periods);
-            for (Period period: periods) {
-                period.setDateTime(period.getDateTime().plusDays(1));
-            }
-            date = date.plusDays(1);
-        }
-
-        spareDays--;
-        revisionEndDate.plusDays(1);
-
-        return true;
-    }
+//    public static Timetable addBreakDay(LocalDate breakDate, Timetable timetable) {
+//        Map<LocalDate, ArrayList<Period>> timetableAssignment = timetable.getTimetableAssignment();
+//        long extraDays = timetable.getExtraDays();
+//        LocalDate revisionEndDate = timetable.getRevisionEndDate();
+//        if (!timetableAssignment.containsKey(breakDate) || extraDays <= 0) {
+//            System.out.println(extraDays);
+//            return null;
+//        }
+//        ArrayList<Period> breakDay = new ArrayList<>();
+//        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+//        ArrayList<Period> periods = timetableAssignment.replace(breakDate, breakDay);
+//        LocalDate date = breakDate.plusDays(1);
+//        for (Period period: periods) {
+//            period.setDateTime(period.getDateTime().plusDays(1));
+//        }
+//
+//        while (timetableAssignment.containsKey(date)) {
+//            periods = timetableAssignment.replace(date, periods);
+//            for (Period period: periods) {
+//                period.setDateTime(period.getDateTime().plusDays(1));
+//            }
+//            date = date.plusDays(1);
+//        }
+//
+//        extraDays--;
+//        revisionEndDate.plusDays(1);
+//
+//        timetable.setExtraDays(extraDays);
+//        timetable.setRevisionEndDate(revisionEndDate);
+//
+//        return timetable;
+//    }
 
     public Map<LocalDate, ArrayList<Period>> getAssignment() {
         return timetableAssignment;
@@ -148,6 +154,50 @@ public class Timetable {
         return subjects;
     }
 
+    public Period getRewardPeriod() {
+        return rewardPeriod;
+    }
+
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
+    }
+
+    public LocalDate getExamStartDate() {
+        return examStartDate;
+    }
+
+    public LocalDate getRevisionEndDate() {
+        return revisionEndDate;
+    }
+
+    public int getBreakSize() {
+        return breakSize;
+    }
+
+    public Map<LocalDate, ArrayList<Period>> getTimetableAssignment() {
+        return timetableAssignment;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setExamStartDate(LocalDate examStartDate) {
+        this.examStartDate = examStartDate;
+    }
+
+    public void setRevisionEndDate(LocalDate revisionEndDate) {
+        this.revisionEndDate = revisionEndDate;
+    }
+
+    public void setExtraDays(long extraDays) {
+        this.extraDays = extraDays;
+    }
+
+    public void setTimetableAssignment(Map<LocalDate, ArrayList<Period>> timetableAssignment) {
+        this.timetableAssignment = timetableAssignment;
+    }
+
     public static class TimetableBuilder {
         private ArrayList<Subject> nestedSubjects;
         private Period nestedRewardPeriod;
@@ -155,6 +205,7 @@ public class Timetable {
         private LocalDate nestedExamDate;
         private int nestedPeriodDuration;
         private int nestedBreakDuration;
+        private String nestedName;
 
         public TimetableBuilder() {
 
@@ -185,8 +236,13 @@ public class Timetable {
             return this;
         }
 
+        public TimetableBuilder addName(String name) {
+            this.nestedName = name;
+            return this;
+        }
+
         public Timetable createTimetable() {
-            return new Timetable(nestedSubjects, nestedRewardPeriod, nestedStartDateTime, nestedExamDate, nestedBreakDuration);
+            return new Timetable(nestedName, nestedSubjects, nestedRewardPeriod, nestedStartDateTime, nestedExamDate, nestedBreakDuration);
         }
     }
 

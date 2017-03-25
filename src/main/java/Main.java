@@ -16,7 +16,6 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
@@ -172,12 +171,12 @@ public class Main {
             }
 
             LocalDate localDate = LocalDate.parse(req.params(":date"));
-            Timetable timetable = gson.fromJson(req.body(), Timetable.class);
-            timetable = Timetable.addBreakDay(localDate, timetable);
-            if (timetable != null) {
+//            Timetable timetable = gson.fromJson(req.body(), Timetable.class);
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.addBreakDay(dynamoDB, userId, localDate);
+            if (assignment != null) {
                 System.out.println("Timetable is not null");
                 res.type("application/json");
-                return gson.toJson(timetable);
+                return gson.toJson(assignment);
             }
 
             System.out.println("Timetable is null");
@@ -188,7 +187,18 @@ public class Main {
         post("/extra/:subject", (req, res) -> {
             // Assign extra day to a particular subject/topic
             String userId = req.headers("UserId");
-            return null;
+            String subject = req.params("subject");
+            if (TimetableTable.getFreeDays(dynamoDB, userId) <= 0) {
+                res.status(400);
+                return "No spare days left";
+            }
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.assignExtraRevisionDay(dynamoDB, userId, subject);
+            if (assignment == null) {
+                res.status(400);
+                return "Unable to assign extra revision day";
+            }
+            res.type("application/json");
+            return gson.toJson(assignment);
         });
 
     }

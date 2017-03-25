@@ -13,7 +13,8 @@ public class Period {
         SUBJECT,
         BREAK,
         REWARD,
-        BREAK_DAY
+        BREAK_DAY,
+        EXTRA_REVISION_DAY
     }
 
     private PERIOD_TYPE type;
@@ -62,6 +63,7 @@ public class Period {
             case BREAK: return "BREAK";
             case REWARD: return "REWARD";
             case BREAK_DAY: return "BREAK DAY";
+            case EXTRA_REVISION_DAY: return topicName;
             default: return null;
         }
     }

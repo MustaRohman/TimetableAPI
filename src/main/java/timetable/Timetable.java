@@ -69,6 +69,7 @@ public class Timetable {
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
             } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
+                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, rewardPeriod.getPeriodDuration());
                 rewardPeriod.setDateTime(currentDateTime);
                 periodsForDay.add(rewardPeriod);
                 currentDateTime = currentDateTime.plusMinutes(60);
@@ -112,38 +113,38 @@ public class Timetable {
         return extraDays;
     }
 
-    public static Timetable addBreakDay(LocalDate breakDate, Timetable timetable) {
-        Map<LocalDate, ArrayList<Period>> timetableAssignment = timetable.getTimetableAssignment();
-        long extraDays = timetable.getExtraDays();
-        LocalDate revisionEndDate = timetable.getRevisionEndDate();
-        if (!timetableAssignment.containsKey(breakDate) || extraDays <= 0) {
-            System.out.println(extraDays);
-           return null;
-        }
-        ArrayList<Period> breakDay = new ArrayList<>();
-        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
-        ArrayList<Period> periods = timetableAssignment.replace(breakDate, breakDay);
-        LocalDate date = breakDate.plusDays(1);
-        for (Period period: periods) {
-            period.setDateTime(period.getDateTime().plusDays(1));
-        }
-
-        while (timetableAssignment.containsKey(date)) {
-            periods = timetableAssignment.replace(date, periods);
-            for (Period period: periods) {
-                period.setDateTime(period.getDateTime().plusDays(1));
-            }
-            date = date.plusDays(1);
-        }
-
-        extraDays--;
-        revisionEndDate.plusDays(1);
-
-        timetable.setExtraDays(extraDays);
-        timetable.setRevisionEndDate(revisionEndDate);
-
-        return timetable;
-    }
+//    public static Timetable addBreakDay(LocalDate breakDate, Timetable timetable) {
+//        Map<LocalDate, ArrayList<Period>> timetableAssignment = timetable.getTimetableAssignment();
+//        long extraDays = timetable.getExtraDays();
+//        LocalDate revisionEndDate = timetable.getRevisionEndDate();
+//        if (!timetableAssignment.containsKey(breakDate) || extraDays <= 0) {
+//            System.out.println(extraDays);
+//            return null;
+//        }
+//        ArrayList<Period> breakDay = new ArrayList<>();
+//        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+//        ArrayList<Period> periods = timetableAssignment.replace(breakDate, breakDay);
+//        LocalDate date = breakDate.plusDays(1);
+//        for (Period period: periods) {
+//            period.setDateTime(period.getDateTime().plusDays(1));
+//        }
+//
+//        while (timetableAssignment.containsKey(date)) {
+//            periods = timetableAssignment.replace(date, periods);
+//            for (Period period: periods) {
+//                period.setDateTime(period.getDateTime().plusDays(1));
+//            }
+//            date = date.plusDays(1);
+//        }
+//
+//        extraDays--;
+//        revisionEndDate.plusDays(1);
+//
+//        timetable.setExtraDays(extraDays);
+//        timetable.setRevisionEndDate(revisionEndDate);
+//
+//        return timetable;
+//    }
 
     public Map<LocalDate, ArrayList<Period>> getAssignment() {
         return timetableAssignment;

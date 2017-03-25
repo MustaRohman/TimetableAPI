@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Subject {
+
     private String name;
     private Topic[] topics;
     private ArrayList<Period> periods;
@@ -24,5 +25,9 @@ public class Subject {
 
     public ArrayList<Period> getPeriods() {
         return periods;
+    }
+
+    public String getName() {
+        return name;
     }
 }

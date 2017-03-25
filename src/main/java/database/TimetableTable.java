@@ -2,6 +2,7 @@ package database;
 
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
@@ -93,7 +94,7 @@ public class TimetableTable {
                     .withJSON(REWARD_ATTR,  gson.toJson(timetable.getRewardPeriod()))
                     .withJSON(START_DATE_TIME_ATTR, gson.toJson(timetable.getStartDateTime()))
                     .withJSON(EXAM_START_DATE_ATTR, gson.toJson(timetable.getExamStartDate()))
-                    .with(REVISION_END_DATE_ATTR, timetable.getRevisionEndDate().toString())
+                    .withJSON(REVISION_END_DATE_ATTR, gson.toJson(timetable.getRevisionEndDate()))
                     .withLong(SPARE_DAYS_ATTR, timetable.getExtraDays())
                     .withInt(BREAK_SIZE_ATTR, timetable.getBreakSize())
                     .withJSON(ASSIGNMENT_ATTR, gson.toJson(timetable.getTimetableAssignment()))
@@ -152,5 +153,98 @@ public class TimetableTable {
         startAndEndDates[0] = ldt.toLocalDate();
         startAndEndDates[1] = gson.fromJson(endJson, LocalDate.class);
         return startAndEndDates;
+    }
+
+    public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        Item item = table.getItem(USER_ID_ATTR, userId);
+
+        String json = item.getJSON(ASSIGNMENT_ATTR);
+        Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
+        Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(json, type);
+
+        LocalDate revisionEndDate = gson.fromJson(item.getJSON(REVISION_END_DATE_ATTR), LocalDate.class);
+        revisionEndDate = revisionEndDate.plusDays(1);
+
+        long freeDays = item.getLong(SPARE_DAYS_ATTR);
+
+        ArrayList<Period> extraRevisionDay = new ArrayList<>();
+        extraRevisionDay.add(new Period(Period.PERIOD_TYPE.EXTRA_REVISION_DAY, subject, 0, 1500));
+        assignment.put(revisionEndDate, extraRevisionDay);
+        freeDays--;
+
+        boolean success = updateTimetableAssignment(table, item, userId, freeDays, revisionEndDate, assignment);
+
+        if (success) {
+            return assignment;
+        } else {
+            return null;
+        }
+    }
+
+    public static  Map<LocalDate, ArrayList<Period>> addBreakDay(DynamoDB dynamoDB, String userId, LocalDate breakDate) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        Item item = getItem(dynamoDB, userId);
+        Map<LocalDate, ArrayList<Period>> assignment = getTimetableAssignment(dynamoDB, userId);
+        long freeDays = getFreeDays(dynamoDB, userId);
+        LocalDate revisionEndDate = getStartAndEndDates(dynamoDB, userId)[1];
+        if (!assignment.containsKey(breakDate) || freeDays <= 0) {
+            System.out.println(freeDays);
+            return null;
+        }
+        ArrayList<Period> breakDay = new ArrayList<>();
+        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+        ArrayList<Period> periods = assignment.replace(breakDate, breakDay);
+        assignment.put(revisionEndDate.plusDays(1), null);
+        LocalDate date = breakDate.plusDays(1);
+        for (Period period: periods) {
+            period.setDateTime(period.getDateTime().plusDays(1));
+        }
+
+        while (assignment.containsKey(date)) {
+            periods = assignment.replace(date, periods);
+            if (periods != null) {
+                for (Period period: periods) {
+                    period.setDateTime(period.getDateTime().plusDays(1));
+                }
+            }
+            date = date.plusDays(1);
+        }
+
+        freeDays--;
+        revisionEndDate.plusDays(1);
+
+        boolean success = updateTimetableAssignment(table, item, userId, freeDays, revisionEndDate, assignment);
+
+        if (success) {
+            return assignment;
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean updateTimetableAssignment(Table table, Item item, String userId, long freeDays,
+                                                  LocalDate revisionEndDate, Map<LocalDate, ArrayList<Period>> assignment) {
+        try {
+            System.out.println("Updating existing item...");
+            PutItemOutcome outcome = table.putItem(new Item()
+                    .withPrimaryKey(USER_ID_ATTR, userId)
+                    .withString(NAME_ATTR, item.getString(NAME_ATTR))
+                    .withJSON(SUBJECTS_ATTR, item.getJSON(SUBJECTS_ATTR))
+                    .withJSON(REWARD_ATTR,  item.getJSON(REWARD_ATTR))
+                    .withJSON(START_DATE_TIME_ATTR, item.getJSON(START_DATE_TIME_ATTR))
+                    .withJSON(EXAM_START_DATE_ATTR, item.getJSON(EXAM_START_DATE_ATTR))
+                    .withJSON(REVISION_END_DATE_ATTR, gson.toJson(revisionEndDate))
+                    .withLong(SPARE_DAYS_ATTR, freeDays)
+                    .withInt(BREAK_SIZE_ATTR, item.getInt(BREAK_SIZE_ATTR))
+                    .withJSON(ASSIGNMENT_ATTR, gson.toJson(assignment))
+            );
+            System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
+            return true;
+        } catch (Exception e) {
+            System.err.println("Unable to add item: " + " id: " + userId);
+            System.err.println(e.getMessage());
+            return false;
+        }
     }
 }

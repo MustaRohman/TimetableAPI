@@ -25,8 +25,7 @@ import static spark.Spark.*;
 public class Main {
 
     private static DynamoDB dynamoDB = new DynamoDB(new AmazonDynamoDBClient()
-            .withRegion(Regions.EU_WEST_1)
-            .withEndpoint("http://localhost:8000"));
+            .withRegion(Regions.US_EAST_1));
 
     private enum OBJECT_TYPE {
         CONFIG,
@@ -43,7 +42,6 @@ public class Main {
         final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
         get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
-
 
         get("/list", (req, res) -> {
             String userId = req.headers("UserId");
@@ -120,6 +118,7 @@ public class Main {
 
         post("/create", (req, res) -> {
             String userId = req.headers("UserId");
+            System.out.println(userId);
 
             if (!"application/json".equals(req.contentType())) {
                 res.status(400);
@@ -143,6 +142,11 @@ public class Main {
             if (timetable == null) {
                 res.status(400);
                 return res.status();
+            }
+
+            if (timetable.getExtraDays() <= 0) {
+                res.status(400);
+                return "Revision start date and Exam start date are too close.";
             }
 //            TimetableTable.deleteTimetablesTable(dynamoDB);
             Table table = TimetableTable.createTimetablesTable(dynamoDB);

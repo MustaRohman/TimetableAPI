@@ -2,7 +2,6 @@ package database;
 
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
@@ -12,7 +11,6 @@ import com.google.gson.reflect.TypeToken;
 import timetable.Period;
 import timetable.Timetable;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Created by mustarohman on 18/03/2017.
@@ -144,7 +144,7 @@ public class TimetableTable {
         return item.getInt(SPARE_DAYS_ATTR);
     }
 
-    public static LocalDate[] getStartAndEndDates(DynamoDB dynamoDB, String userId) {
+    public static LocalDate[] getRevisionStartAndEndDates(DynamoDB dynamoDB, String userId) {
         Item item = getItem(dynamoDB, userId);
         LocalDate[] startAndEndDates = new LocalDate[2];
         String startJson = item.getJSON(START_DATE_TIME_ATTR);
@@ -153,6 +153,18 @@ public class TimetableTable {
         startAndEndDates[0] = ldt.toLocalDate();
         startAndEndDates[1] = gson.fromJson(endJson, LocalDate.class);
         return startAndEndDates;
+    }
+
+    public static LocalDate getExamStartDate(DynamoDB dynamoDB, String userId) {
+        Item item = getItem(dynamoDB, userId);
+        LocalDate ldt = null;
+        ldt = gson.fromJson(item.getJSON(EXAM_START_DATE_ATTR), LocalDate.class);
+        return ldt;
+    }
+
+    public static long getDaysUntilExamStart(DynamoDB dynamoDB, String userId, LocalDate currentDate) {
+        LocalDate examStartDate = getExamStartDate(dynamoDB, userId);
+        return DAYS.between(currentDate, examStartDate);
     }
 
     public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {
@@ -187,7 +199,7 @@ public class TimetableTable {
         Item item = getItem(dynamoDB, userId);
         Map<LocalDate, ArrayList<Period>> assignment = getTimetableAssignment(dynamoDB, userId);
         long freeDays = getFreeDays(dynamoDB, userId);
-        LocalDate revisionEndDate = getStartAndEndDates(dynamoDB, userId)[1];
+        LocalDate revisionEndDate = getRevisionStartAndEndDates(dynamoDB, userId)[1];
         if (!assignment.containsKey(breakDate) || freeDays <= 0) {
             System.out.println(freeDays);
             return null;

@@ -71,6 +71,7 @@ public class Main {
 
         get("/agenda/week/:week", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the week
+            // Input: 2015-W49
             String userId = req.headers("UserId");
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
 //            2015-W49
@@ -94,7 +95,7 @@ public class Main {
         get("/progress/revision/:date", (req, res) -> {
             String userId = req.headers("UserId");
             LocalDate date = LocalDate.parse(req.params("date"));
-            LocalDate[] startAndEndDates = TimetableTable.getStartAndEndDates(dynamoDB, userId);
+            LocalDate[] startAndEndDates = TimetableTable.getRevisionStartAndEndDates(dynamoDB, userId);
             long length = DAYS.between(startAndEndDates[0], startAndEndDates[1]);
             long progress = DAYS.between(startAndEndDates[0], date);
             if (progress < 0) {
@@ -104,8 +105,29 @@ public class Main {
             System.out.println("Progress: " + progress);
             System.out.println("Length: " + length);
             float perc = 100 * progress/length;
+            if (perc > 100) {
+                return 100;
+            }
             System.out.println(perc);
-            return perc;
+            return String.format("%.2f", perc);
+        });
+
+        get("/exam-start", (req, res) -> {
+            String userId = req.headers("UserId");
+            LocalDate ldt = TimetableTable.getExamStartDate(dynamoDB, userId);
+            if (ldt == null) {
+                res.status(400);
+                return "Unable to get exam start date";
+            } else {
+                System.out.println(ldt.toString());
+                return ldt.toString();
+            }
+        });
+
+        get("/days-until-exam/:date", (req, res) -> {
+            String userId = req.headers("UserId");
+            LocalDate ldt = LocalDate.parse(req.params("date"));
+            return TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
         });
 
         post("/login", (req, res) -> {
@@ -218,7 +240,7 @@ public class Main {
                 .with(weekFields.dayOfWeek(), 1);
         ArrayList<String> topicsAgenda = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
-            System.out.println(ldt.toString());
+            System.out.println(ldt.getDayOfWeek());
             ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
             if (dayAgenda != null) {
                 topicsAgenda.addAll(dayAgenda);
@@ -226,6 +248,10 @@ public class Main {
             ldt = ldt.plusDays(1);
         }
         return topicsAgenda;
+    }
+
+    private static ArrayList<String> getAgendaForWeekend(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
+        return null;
     }
 
     private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {

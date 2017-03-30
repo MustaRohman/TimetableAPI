@@ -207,7 +207,7 @@ public class Main {
 
             System.out.println("Timetable is null");
             res.status(400);
-            return res.status();
+            return "Unable to add break day";
         }) ;
 
         post("/extra/:subject", (req, res) -> {

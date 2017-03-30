@@ -210,6 +210,9 @@ public class TimetableTable {
         assignment.put(revisionEndDate.plusDays(1), null);
         LocalDate date = breakDate.plusDays(1);
         for (Period period: periods) {
+            if (period.getType() == Period.PERIOD_TYPE.BREAK_DAY) {
+                return assignment;
+            }
             period.setDateTime(period.getDateTime().plusDays(1));
         }
 

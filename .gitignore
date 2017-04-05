@@ -154,6 +154,8 @@ $RECYCLE.BIN/
 
 .idea/sonarlint/
 
+target/heroku/slug.tgz
+
 
 # Ignore Gradle GUI config
 gradle-app.setting

@@ -3,6 +3,7 @@ package database;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.Gson;
@@ -26,7 +27,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
  */
 public class TimetableTable {
 
-    private final static String TABLE_NAME = "Timetables";
+    public final static String TABLE_NAME = "Timetables";
     private final static String USER_ID_ATTR = "UserId";
     private final static String NAME_ATTR = "Name";
     private final static String SUBJECTS_ATTR = "Subjects";
@@ -41,30 +42,7 @@ public class TimetableTable {
     static final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
 
-    public static Table createTimetablesTable(DynamoDB dynamoDB) {
-        Table table = null;
-        try {
-            System.out.println("Attempting to create table; please wait...");
-            table = dynamoDB.createTable(TABLE_NAME,
-                    Arrays.asList(
-                            new KeySchemaElement(USER_ID_ATTR, KeyType.HASH)), //Partition key
-                    Arrays.asList(
-                            new AttributeDefinition("UserId", ScalarAttributeType.S)),
-                    new ProvisionedThroughput(10L, 10L));
-            table.waitForActive();
-            System.out.println("Success.  Table status: " + table.getDescription().getTableStatus());
-            return table;
 
-        } catch (Exception e) {
-            System.err.println("Unable to create table: ");
-            System.err.println(e.getMessage());
-            table = dynamoDB.getTable("Timetables");
-            if (table != null) {
-                return table;
-            }
-            return null;
-        }
-    }
 
     public static Item getItem(DynamoDB dynamoDB, String userId) {
         Table table = dynamoDB.getTable(TABLE_NAME);
@@ -72,16 +50,7 @@ public class TimetableTable {
         return item;
     }
 
-    public static void deleteTimetablesTable(DynamoDB dynamoDB) {
-        Table table = dynamoDB.getTable(TABLE_NAME);
-        try {
-            table.delete();
-            table.waitForDelete();
-        } catch (InterruptedException e) {
-            System.out.println("Unable to delete Timetables table");
-            e.printStackTrace();
-        }
-    }
+
 
     public static Item addItem(DynamoDB dynamoDB, String userId, Timetable timetable) {
         Table table = dynamoDB.getTable("Timetables");

@@ -9,7 +9,7 @@ import java.util.Arrays;
 /**
  * Created by mustarohman on 04/04/2017.
  */
-public class DynamoDBTable {
+public class DBTable {
 
     public static Table createTable(DynamoDB dynamoDB, String tableName) {
         Table table = null;
@@ -33,6 +33,17 @@ public class DynamoDBTable {
                 return table;
             }
             return null;
+        }
+    }
+
+    public static void deleteTable(DynamoDB dynamoDB, String tableName) {
+        Table table = dynamoDB.getTable(tableName);
+        try {
+            table.delete();
+            table.waitForDelete();
+        } catch (InterruptedException e) {
+            System.out.println("Unable to delete Timetables table");
+            e.printStackTrace();
         }
     }
 }

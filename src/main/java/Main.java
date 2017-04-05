@@ -8,7 +8,9 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.*;
+import database.DBTable;
 import database.TimetableTable;
+import database.UserTable;
 import spark.Spark;
 import timetable.Period;
 import timetable.Subject;
@@ -56,12 +58,15 @@ public class Main {
 
         get("/agenda/day/:date", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the day
+            System.out.println("/agenda/day/:date");
             String userId = req.headers("UserId");
+            System.out.println(userId);
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
             ArrayList<String> agenda = getAgendaForDay(assignment, date);
             if (agenda == null || agenda.isEmpty()) {
+                System.out.println("Error");
                 res.status(400);
                 return res.status();
             }
@@ -171,7 +176,7 @@ public class Main {
                 return "Revision start date and Exam start date are too close.";
             }
 //            TimetableTable.deleteTimetablesTable(dynamoDB);
-            Table table = TimetableTable.createTimetablesTable(dynamoDB);
+            Table table = DBTable.createTable(dynamoDB, TimetableTable.TABLE_NAME);
             Item item = null;
             if (table != null) {
                 item = TimetableTable.addItem(dynamoDB, userId, timetable);
@@ -180,6 +185,24 @@ public class Main {
 
             System.out.println(item);
             return item.getJSON("Assignment");
+        });
+
+        post("/launch", (req, res) -> {
+            String userId = req.headers("UserId");
+            if (userId == null) {
+                res.status(400);
+                return res.status();
+            }
+            Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
+            Item item = UserTable.getItem(dynamoDB, userId);
+            if (item != null) {
+                System.out.println("Item already exists");
+                return item.getString(UserTable.CODE_ATTR);
+            }
+            if (table != null) {
+                item = UserTable.addItem(dynamoDB, userId);
+            }
+            return item.getString(UserTable.CODE_ATTR);
         });
 
         post("/break/:date", (req, res) -> {

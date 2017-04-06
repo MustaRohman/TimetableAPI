@@ -135,13 +135,19 @@ public class Main {
             return TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
         });
 
-        post("/login", (req, res) -> {
-            createUsersTable();
-            String userId = req.headers("UserId");
-            if (checkUser(userId)) addUser(userId);
+        get("/login", (req, res) -> {
+            Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
+            String code = req.headers("code");
+            System.out.println(code);
+            String userId = UserTable.getUserIdByCode(dynamoDB, code);
+            if (userId == null) {
+                res.status(400);
+                return "Unable to get code";
+            }
             res.status(200);
-            return res.status();
+            return userId;
         });
+
 
         post("/create", (req, res) -> {
             String userId = req.headers("UserId");

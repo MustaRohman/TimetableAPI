@@ -2,6 +2,7 @@ package database;
 
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.*;
 import org.mindrot.jbcrypt.BCrypt;
@@ -24,6 +25,21 @@ public class UserTable {
         return table.getItem(USER_ID_ATTR, userId);
     }
 
+    public static String getUserIdByCode(DynamoDB dynamoDB, String code) {
+        Table table = dynamoDB.getTable(TABLE_NAME);
+        ScanSpec spec = new ScanSpec()
+                .withFilterExpression(CODE_ATTR + "= :v_id")
+                .withValueMap(new ValueMap()
+                        .withString(":v_id", code));
+        ItemCollection<ScanOutcome> items = table.scan(spec);
+        Item item = null;
+        if (items.iterator().hasNext()) {
+            item = items.iterator().next();
+        }
+        return item.getString(USER_ID_ATTR);
+    }
+
+
     public static Item addItem(DynamoDB dynamoDB, String userId) {
         Table table = dynamoDB.getTable(TABLE_NAME);
 //        String count = String.valueOf(table.getDescription().getItemCount() + 1);
@@ -38,7 +54,7 @@ public class UserTable {
 
         ItemCollection<QueryOutcome> items = table.query(spec);
         while (items.getAccumulatedScannedCount() > 0) {
-            System.out.println("Generating code...");
+            System.out.println("Regenerating code...");
             code = UUID.randomUUID().toString().substring(0,13);
             System.out.println(code);
             items = table.query(spec);

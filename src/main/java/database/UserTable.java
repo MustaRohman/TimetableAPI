@@ -36,6 +36,9 @@ public class UserTable {
         if (items.iterator().hasNext()) {
             item = items.iterator().next();
         }
+        if (item == null) {
+            return null;
+        }
         return item.getString(USER_ID_ATTR);
     }
 

@@ -65,11 +65,18 @@ public class Main {
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
             ArrayList<String> agenda = getAgendaForDay(assignment, date);
-            if (agenda == null || agenda.isEmpty()) {
+            if (agenda == null) {
                 System.out.println("Error");
                 res.status(400);
-                return res.status();
+                return "Bad request";
             }
+
+            if (agenda.isEmpty()) {
+                System.out.println("No event has been assigned for that date");
+                res.status(400);
+                return "No event has been assigned for that date";
+            }
+
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -81,7 +88,17 @@ public class Main {
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
 //            2015-W49
             String week = req.params("week");
-            ArrayList<String> agenda = getAgendaForWeek(assignment, week);
+            ArrayList<String> agenda = getAgendaForWeek(assignment, week, false);
+            res.type("application/json");
+            return gson.toJson(agenda);
+        });
+
+        get("/agenda/weekend/:week", (req, res) -> {
+            String userId = req.headers("UserId");
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+//            2015-W49-WE
+            String week = req.params("week");
+            ArrayList<String> agenda = getAgendaForWeek(assignment, week, true);
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -258,7 +275,7 @@ public class Main {
 
     }
 
-    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
+    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber, boolean isWeekend) {
         String[] split = weekNumber.split("-");
         int year = Integer.parseInt(split[0]);
         int week = Integer.parseInt(split[1].substring(1));
@@ -266,9 +283,9 @@ public class Main {
         LocalDate ldt = LocalDate.now()
                 .withYear(year)
                 .with(weekFields.weekOfYear(), week)
-                .with(weekFields.dayOfWeek(), 1);
+                .with(weekFields.dayOfWeek(), (isWeekend) ? 6 : 1);
         ArrayList<String> topicsAgenda = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < ((isWeekend) ? 2 : 7); i++) {
             System.out.println(ldt.getDayOfWeek());
             ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
             if (dayAgenda != null) {
@@ -279,9 +296,6 @@ public class Main {
         return topicsAgenda;
     }
 
-    private static ArrayList<String> getAgendaForWeekend(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
-        return null;
-    }
 
     private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {
         ArrayList<Period> periodsForDay = assignment.get(date);

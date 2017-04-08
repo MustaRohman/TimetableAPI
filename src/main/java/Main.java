@@ -8,7 +8,9 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.*;
+import database.DBTable;
 import database.TimetableTable;
+import database.UserTable;
 import spark.Spark;
 import timetable.Period;
 import timetable.Subject;
@@ -56,15 +58,25 @@ public class Main {
 
         get("/agenda/day/:date", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the day
+            System.out.println("/agenda/day/:date");
             String userId = req.headers("UserId");
+            System.out.println(userId);
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
             ArrayList<String> agenda = getAgendaForDay(assignment, date);
-            if (agenda == null || agenda.isEmpty()) {
+            if (agenda == null) {
+                System.out.println("Error");
                 res.status(400);
-                return res.status();
+                return "Bad request";
             }
+
+            if (agenda.isEmpty()) {
+                System.out.println("No event has been assigned for that date");
+                res.status(400);
+                return "No event has been assigned for that date";
+            }
+
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -76,7 +88,17 @@ public class Main {
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
 //            2015-W49
             String week = req.params("week");
-            ArrayList<String> agenda = getAgendaForWeek(assignment, week);
+            ArrayList<String> agenda = getAgendaForWeek(assignment, week, false);
+            res.type("application/json");
+            return gson.toJson(agenda);
+        });
+
+        get("/agenda/weekend/:week", (req, res) -> {
+            String userId = req.headers("UserId");
+            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+//            2015-W49-WE
+            String week = req.params("week");
+            ArrayList<String> agenda = getAgendaForWeek(assignment, week, true);
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -130,13 +152,19 @@ public class Main {
             return TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
         });
 
-        post("/login", (req, res) -> {
-            createUsersTable();
-            String userId = req.headers("UserId");
-            if (checkUser(userId)) addUser(userId);
+        get("/login", (req, res) -> {
+            Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
+            String code = req.headers("code");
+            System.out.println(code);
+            String userId = UserTable.getUserIdByCode(dynamoDB, code);
+            if (userId == null) {
+                res.status(400);
+                return "Unable to get code";
+            }
             res.status(200);
-            return res.status();
+            return userId;
         });
+
 
         post("/create", (req, res) -> {
             String userId = req.headers("UserId");
@@ -171,7 +199,7 @@ public class Main {
                 return "Revision start date and Exam start date are too close.";
             }
 //            TimetableTable.deleteTimetablesTable(dynamoDB);
-            Table table = TimetableTable.createTimetablesTable(dynamoDB);
+            Table table = DBTable.createTable(dynamoDB, TimetableTable.TABLE_NAME);
             Item item = null;
             if (table != null) {
                 item = TimetableTable.addItem(dynamoDB, userId, timetable);
@@ -180,6 +208,24 @@ public class Main {
 
             System.out.println(item);
             return item.getJSON("Assignment");
+        });
+
+        post("/launch", (req, res) -> {
+            String userId = req.headers("UserId");
+            if (userId == null) {
+                res.status(400);
+                return res.status();
+            }
+            Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
+            Item item = UserTable.getItem(dynamoDB, userId);
+            if (item != null) {
+                System.out.println("Item already exists");
+                return item.getString(UserTable.CODE_ATTR);
+            }
+            if (table != null) {
+                item = UserTable.addItem(dynamoDB, userId);
+            }
+            return item.getString(UserTable.CODE_ATTR);
         });
 
         post("/break/:date", (req, res) -> {
@@ -207,7 +253,7 @@ public class Main {
 
             System.out.println("Timetable is null");
             res.status(400);
-            return res.status();
+            return "Unable to add break day";
         }) ;
 
         post("/extra/:subject", (req, res) -> {
@@ -229,7 +275,7 @@ public class Main {
 
     }
 
-    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
+    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber, boolean isWeekend) {
         String[] split = weekNumber.split("-");
         int year = Integer.parseInt(split[0]);
         int week = Integer.parseInt(split[1].substring(1));
@@ -237,9 +283,9 @@ public class Main {
         LocalDate ldt = LocalDate.now()
                 .withYear(year)
                 .with(weekFields.weekOfYear(), week)
-                .with(weekFields.dayOfWeek(), 1);
+                .with(weekFields.dayOfWeek(), (isWeekend) ? 6 : 1);
         ArrayList<String> topicsAgenda = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < ((isWeekend) ? 2 : 7); i++) {
             System.out.println(ldt.getDayOfWeek());
             ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
             if (dayAgenda != null) {
@@ -250,9 +296,6 @@ public class Main {
         return topicsAgenda;
     }
 
-    private static ArrayList<String> getAgendaForWeekend(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber) {
-        return null;
-    }
 
     private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {
         ArrayList<Period> periodsForDay = assignment.get(date);

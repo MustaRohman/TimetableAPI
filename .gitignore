@@ -155,6 +155,8 @@ $RECYCLE.BIN/
 .idea/sonarlint/
 
 
+
+
 # Ignore Gradle GUI config
 gradle-app.setting
 
@@ -168,3 +170,5 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 
 # End of https://www.gitignore.io/api/maven,gradle,macos,intellij,linux,windows,java
+/target/heroku/
+/target/surefire-reports/

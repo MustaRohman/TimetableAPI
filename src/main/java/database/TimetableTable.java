@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.*;
 import com.fatboyindustrial.gsonjavatime.Converters;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import timetable.Period;
 import timetable.Timetable;
@@ -104,12 +105,18 @@ public class TimetableTable {
         Table table = dynamoDB.getTable(TABLE_NAME);
         Item item = getItem(dynamoDB, userId);
         String json = item.getJSON(ASSIGNMENT_ATTR);
+        if (json == null) {
+            return null;
+        }
         Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
         return gson.fromJson(json, type);
     }
 
-    public static int getFreeDays(DynamoDB dynamoDB, String userId) {
+    public static Integer getFreeDays(DynamoDB dynamoDB, String userId) {
         Item item = getItem(dynamoDB, userId);
+        if (item == null) {
+            return null;
+        }
         return item.getInt(SPARE_DAYS_ATTR);
     }
 
@@ -126,14 +133,17 @@ public class TimetableTable {
 
     public static LocalDate getExamStartDate(DynamoDB dynamoDB, String userId) {
         Item item = getItem(dynamoDB, userId);
-        LocalDate ldt = null;
-        ldt = gson.fromJson(item.getJSON(EXAM_START_DATE_ATTR), LocalDate.class);
-        return ldt;
+        String json = item.getJSON(EXAM_START_DATE_ATTR);
+        if (json == null) {
+            return null;
+        }
+        return gson.fromJson(item.getJSON(EXAM_START_DATE_ATTR), LocalDate.class);
     }
 
-    public static long getDaysUntilExamStart(DynamoDB dynamoDB, String userId, LocalDate currentDate) {
+    public static Long getDaysUntilExamStart(DynamoDB dynamoDB, String userId, LocalDate currentDate) {
         LocalDate examStartDate = getExamStartDate(dynamoDB, userId);
-        return DAYS.between(currentDate, examStartDate);
+        return (examStartDate == null) ? null : DAYS.between(currentDate, examStartDate);
+
     }
 
     public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {

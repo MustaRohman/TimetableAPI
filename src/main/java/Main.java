@@ -45,23 +45,17 @@ public class Main {
 
         get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
 
-        get("/list", (req, res) -> {
-            String userId = req.headers("UserId");
-            if (userId == null) {
-                res.status(400);
-                return res.status();
-            }
-            ArrayList<String> list = TimetableTable.getTimetableList(dynamoDB, userId);
-            res.type("application/json");
-            return gson.toJson(list);
-        });
-
         get("/agenda/day/:date", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the day
             System.out.println("/agenda/day/:date");
             String userId = req.headers("UserId");
             System.out.println(userId);
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+            if (assignment == null) {
+                System.out.println("No timetable data under UserId");
+                res.status(400);
+                return "No timetable under UserId";
+            }
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
             ArrayList<String> agenda = getAgendaForDay(assignment, date);
@@ -86,6 +80,11 @@ public class Main {
             // Input: 2015-W49
             String userId = req.headers("UserId");
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+            if (assignment == null) {
+                System.out.println("No timetable data under UserId");
+                res.status(400);
+                return "No timetable under UserId";
+            }
 //            2015-W49
             String week = req.params("week");
             ArrayList<String> agenda = getAgendaForWeek(assignment, week, false);
@@ -96,6 +95,11 @@ public class Main {
         get("/agenda/weekend/:week", (req, res) -> {
             String userId = req.headers("UserId");
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
+            if (assignment == null) {
+                System.out.println("No timetable data under UserId");
+                res.status(400);
+                return "No timetable under UserId";
+            }
 //            2015-W49-WE
             String week = req.params("week");
             ArrayList<String> agenda = getAgendaForWeek(assignment, week, true);
@@ -106,7 +110,13 @@ public class Main {
         get("/free", (req, res) -> {
             // Number of free days available
             String userId = req.headers("UserId");
-            return TimetableTable.getFreeDays(dynamoDB, userId);
+            Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
+            if (freeDays == null) {
+                res.status(400);
+                return "No timetable under UserId";
+            } else {
+                return freeDays;
+            }
         });
 
         get("/progress/subject/:subject", (req, res) -> {
@@ -149,13 +159,18 @@ public class Main {
         get("/days-until-exam/:date", (req, res) -> {
             String userId = req.headers("UserId");
             LocalDate ldt = LocalDate.parse(req.params("date"));
-            return TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
+            Long days = TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
+            if (days == null) {
+                res.status(400);
+                return "No timetable under UserId";
+            } else {
+                return days;
+            }
         });
 
         get("/login", (req, res) -> {
             Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
             String code = req.headers("code");
-            System.out.println(code);
             String userId = UserTable.getUserIdByCode(dynamoDB, code);
             if (userId == null) {
                 res.status(400);
@@ -239,11 +254,10 @@ public class Main {
             if (!"application/json".equals(req.contentType())) {
                 System.out.println();
                 res.status(400);
-                return res.status();
+                return "Invalid content type";
             }
 
             LocalDate localDate = LocalDate.parse(req.params(":date"));
-//            Timetable timetable = gson.fromJson(req.body(), Timetable.class);
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.addBreakDay(dynamoDB, userId, localDate);
             if (assignment != null) {
                 System.out.println("Timetable is not null");
@@ -260,7 +274,12 @@ public class Main {
             // Assign extra day to a particular subject/topic
             String userId = req.headers("UserId");
             String subject = req.params("subject");
-            if (TimetableTable.getFreeDays(dynamoDB, userId) <= 0) {
+            Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
+            if (freeDays == null) {
+                res.status(400);
+                return "No timetable under UserId";
+            }
+            if (freeDays <= 0) {
                 res.status(400);
                 return "No spare days left";
             }

@@ -14,19 +14,19 @@ public class Period {
         BREAK,
         REWARD,
         BREAK_DAY,
-        EXTRA_REVISION_DAY
     }
 
     private PERIOD_TYPE type;
     private String topicName;
+    private String subjectName;
     private int number;
     private LocalDateTime dateTime;
     private int periodDuration;
-    private transient boolean completed;
 
-    public Period(PERIOD_TYPE type, String topicName, int number, int periodDuration){
+    public Period(PERIOD_TYPE type, String topicName, String subjectName,int number, int periodDuration){
         this.type = type;
         this.topicName = topicName;
+        this.subjectName = subjectName;
         this.number = number;
         this.dateTime = null;
         this.periodDuration = periodDuration;
@@ -48,14 +48,6 @@ public class Period {
         return periodDuration;
     }
 
-    public void complete() {
-        completed = true;
-    }
-
-    public boolean isComplete() {
-        return completed;
-    }
-
     @Override
     public String toString() {
         switch (type) {
@@ -63,7 +55,6 @@ public class Period {
             case BREAK: return "BREAK";
             case REWARD: return "REWARD";
             case BREAK_DAY: return "BREAK DAY";
-            case EXTRA_REVISION_DAY: return topicName;
             default: return null;
         }
     }

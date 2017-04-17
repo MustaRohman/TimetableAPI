@@ -18,6 +18,7 @@ import timetable.Timetable;
 import timetable.Topic;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
@@ -25,6 +26,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import static spark.Spark.*;
 
 public class Main {
+
+//    Based on code from http://sparkjava.com
 
     private static DynamoDB dynamoDB = new DynamoDB(new AmazonDynamoDBClient()
             .withRegion(Regions.US_EAST_1));
@@ -45,20 +48,44 @@ public class Main {
 
         get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
 
+        get("/subjects", (req, res) -> {
+            String userId = req.headers("UserId");
+            ArrayList<String> subjectList = TimetableTable.getSubjectsList(dynamoDB, userId);
+            if (subjectList == null) {
+                System.out.println("No timetable data under UserId");
+                res.status(400);
+                return "No timetable data under UserId";
+            }
+            res.type("application/json");
+            return gson.toJson(subjectList);
+        });
+
+        get("/task/:date/:time", (req, res) -> {
+            String userId = req.headers("UserId");
+            LocalDate date = LocalDate.parse(req.params("date"));
+            LocalTime time = LocalTime.parse(req.params("time"));
+            Period task = TimetableTable.getTaskAtTimeAndDate(dynamoDB, userId, date, time);
+            if (task == null) {
+                System.out.println("Unable to get task");
+                res.status(400);
+                return "Unable to get task at that date and time";
+            }
+            res.type("application/json");
+            return gson.toJson(task);
+        });
+
         get("/agenda/day/:date", (req, res) -> {
             // Returns Subjects and their topics that are assigned to the day
-            System.out.println("/agenda/day/:date");
             String userId = req.headers("UserId");
-            System.out.println(userId);
             Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.getTimetableAssignment(dynamoDB, userId);
             if (assignment == null) {
                 System.out.println("No timetable data under UserId");
                 res.status(400);
-                return "No timetable under UserId";
+                return "No timetable data under UserId";
             }
             String dateParam = req.params("date");
             LocalDate date = LocalDate.parse(dateParam);
-            ArrayList<String> agenda = getAgendaForDay(assignment, date);
+            ArrayList<String> agenda = Timetable.getAgendaForDay(assignment, date);
             if (agenda == null) {
                 System.out.println("Error");
                 res.status(400);
@@ -70,7 +97,7 @@ public class Main {
                 res.status(400);
                 return "No event has been assigned for that date";
             }
-
+            System.out.println("Sending agenda");
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -83,11 +110,11 @@ public class Main {
             if (assignment == null) {
                 System.out.println("No timetable data under UserId");
                 res.status(400);
-                return "No timetable under UserId";
+                return "No timetable data under UserId";
             }
 //            2015-W49
             String week = req.params("week");
-            ArrayList<String> agenda = getAgendaForWeek(assignment, week, false);
+            ArrayList<String> agenda = Timetable.getAgendaForWeek(assignment, week, false);
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -98,11 +125,11 @@ public class Main {
             if (assignment == null) {
                 System.out.println("No timetable data under UserId");
                 res.status(400);
-                return "No timetable under UserId";
+                return "No timetable data under UserId";
             }
 //            2015-W49-WE
             String week = req.params("week");
-            ArrayList<String> agenda = getAgendaForWeek(assignment, week, true);
+            ArrayList<String> agenda = Timetable.getAgendaForWeek(assignment, week, true);
             res.type("application/json");
             return gson.toJson(agenda);
         });
@@ -113,7 +140,7 @@ public class Main {
             Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
             if (freeDays == null) {
                 res.status(400);
-                return "No timetable under UserId";
+                return "No timetable data under UserId";
             } else {
                 return freeDays;
             }
@@ -162,7 +189,7 @@ public class Main {
             Long days = TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
             if (days == null) {
                 res.status(400);
-                return "No timetable under UserId";
+                return "No timetable data under UserId";
             } else {
                 return days;
             }
@@ -231,15 +258,13 @@ public class Main {
                 res.status(400);
                 return res.status();
             }
-            Table table = DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
             Item item = UserTable.getItem(dynamoDB, userId);
             if (item != null) {
                 System.out.println("Item already exists");
                 return item.getString(UserTable.CODE_ATTR);
             }
-            if (table != null) {
-                item = UserTable.addItem(dynamoDB, userId);
-            }
+
+            item = UserTable.addItem(dynamoDB, userId);
             return item.getString(UserTable.CODE_ATTR);
         });
 
@@ -262,7 +287,7 @@ public class Main {
             if (assignment != null) {
                 System.out.println("Timetable is not null");
                 res.type("application/json");
-                return gson.toJson(assignment);
+                return gson.toJson(assignment.get(localDate));
             }
 
             System.out.println("Timetable is null");
@@ -270,65 +295,28 @@ public class Main {
             return "Unable to add break day";
         }) ;
 
-        post("/extra/:subject", (req, res) -> {
-            // Assign extra day to a particular subject/topic
-            String userId = req.headers("UserId");
-            String subject = req.params("subject");
-            Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
-            if (freeDays == null) {
-                res.status(400);
-                return "No timetable under UserId";
-            }
-            if (freeDays <= 0) {
-                res.status(400);
-                return "No spare days left";
-            }
-            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.assignExtraRevisionDay(dynamoDB, userId, subject);
-            if (assignment == null) {
-                res.status(400);
-                return "Unable to assign extra revision day";
-            }
-            res.type("application/json");
-            return gson.toJson(assignment);
-        });
+//        post("/extra/:subject", (req, res) -> {
+//            // Assign extra day to a particular subject/topic
+//            String userId = req.headers("UserId");
+//            String subject = req.params("subject");
+//            Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
+//            if (freeDays == null) {
+//                res.status(400);
+//                return "No timetable under UserId";
+//            }
+//            if (freeDays <= 0) {
+//                res.status(400);
+//                return "No spare days left";
+//            }
+//            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.assignExtraRevisionDay(dynamoDB, userId, subject);
+//            if (assignment == null) {
+//                res.status(400);
+//                return "Unable to assign extra revision day";
+//            }
+//            res.type("application/json");
+//            return gson.toJson(assignment);
+//        });
 
-    }
-
-    private static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber, boolean isWeekend) {
-        String[] split = weekNumber.split("-");
-        int year = Integer.parseInt(split[0]);
-        int week = Integer.parseInt(split[1].substring(1));
-        WeekFields weekFields = WeekFields.of(Locale.getDefault());
-        LocalDate ldt = LocalDate.now()
-                .withYear(year)
-                .with(weekFields.weekOfYear(), week)
-                .with(weekFields.dayOfWeek(), (isWeekend) ? 6 : 1);
-        ArrayList<String> topicsAgenda = new ArrayList<>();
-        for (int i = 0; i < ((isWeekend) ? 2 : 7); i++) {
-            System.out.println(ldt.getDayOfWeek());
-            ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
-            if (dayAgenda != null) {
-                topicsAgenda.addAll(dayAgenda);
-            }
-            ldt = ldt.plusDays(1);
-        }
-        return topicsAgenda;
-    }
-
-
-    private static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {
-        ArrayList<Period> periodsForDay = assignment.get(date);
-        ArrayList<String> topicsAgenda = new ArrayList<>();
-        if (periodsForDay == null || periodsForDay.isEmpty()) {
-            return null;
-        }
-
-        for (Period period: periodsForDay) {
-            if (!topicsAgenda.contains(period.getTopicName()) && period.getTopicName() != null) {
-                topicsAgenda.add(period.getTopicName());
-            }
-        }
-        return topicsAgenda;
     }
 
 
@@ -364,12 +352,13 @@ public class Main {
                 sessionDuration = configJsonObj.get("session-duration").getAsInt();
                 breakDuration = configJsonObj.get("break-duration").getAsInt();
                 JsonObject rewardJsonObj = configJsonObj.getAsJsonObject("reward");
-                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, rewardJsonObj.get("duration").getAsInt());
+                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, rewardJsonObj.get("duration").getAsInt());
             } else {
                 return null;
             }
 
             final JsonObject subjectObj = subjectElem.getAsJsonObject();
+            String subjectName = subjectObj.get("name").getAsString();
             if (!jsonObjHasProps(subjectObj, OBJECT_TYPE.SUBJECT)) {
                 return null;
             }
@@ -378,10 +367,10 @@ public class Main {
 
             Topic[] topics = new Topic[topicsJsonArray.size()];
             for (int i = 0; i < topicsJsonArray.size(); i++) {
-                topics[i] = (new Topic(topicsJsonArray.get(i).getAsString(), topicDuration, sessionDuration));
+                topics[i] = (new Topic(topicsJsonArray.get(i).getAsString(), subjectName,topicDuration, sessionDuration));
             }
             // Create new subject with topics
-            subjects.add(new Subject(subjectObj.get("name").getAsString(), topics));
+            subjects.add(new Subject(subjectName, topics));
         }
 
         return new Timetable.TimetableBuilder()
@@ -400,61 +389,6 @@ public class Main {
             return Integer.parseInt(processBuilder.environment().get("PORT"));
         }
         return 4567; //return default port if heroku-port isn't set (i.e. on localhost)
-    }
-
-    private static void createUsersTable() {
-        String tableName = "Users";
-
-        try {
-            System.out.println("Attempting to create table; please wait...");
-            Table table = dynamoDB.createTable(tableName,
-                    Arrays.asList(
-                            new KeySchemaElement("id", KeyType.HASH)), //Partition key
-                    Arrays.asList(
-                            new AttributeDefinition("id", ScalarAttributeType.S)),
-                    new ProvisionedThroughput(10L, 10L));
-            table.waitForActive();
-            System.out.println("Success.  Table status: " + table.getDescription().getTableStatus());
-
-        } catch (Exception e) {
-            System.err.println("Unable to create table: ");
-            System.err.println(e.getMessage());
-        }
-
-    }
-
-    private static boolean  checkUser(String userId) {
-
-        Table table = dynamoDB.getTable("Users");
-        GetItemSpec spec = new GetItemSpec()
-                .withPrimaryKey("id", userId);
-
-        try {
-            System.out.println("Attempting to read the item...");
-            Item outcome = table.getItem(spec);
-            System.out.println("GetItem succeeded: " + outcome);
-            return true;
-
-        } catch (Exception e) {
-            System.err.println("Unable to read item: " + " id: " + userId);
-            System.err.println(e.getMessage());
-            return false;
-        }
-    }
-
-    private static void addUser(String userId) {
-        Table table = dynamoDB.getTable("Users");
-        try {
-            System.out.println("Adding a new item...");
-            PutItemOutcome outcome = table.putItem(new Item()
-                    .withPrimaryKey("id", userId));
-
-            System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
-
-        } catch (Exception e) {
-            System.err.println("Unable to add item: " + " id: " + userId);
-            System.err.println(e.getMessage());
-        }
     }
 
 }

@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 public class TopicTest {
 
     // 5 hours = 300 min
-    Topic topic = new Topic("Trees2", 300, 45);
+    Topic topic = new Topic("Trees2", "Subject", 300, 45);
 
     @Test
     public void testGeneratePeriods() {

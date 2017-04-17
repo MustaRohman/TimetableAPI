@@ -1,18 +1,16 @@
+import database.TimetableTable;
 import org.junit.Test;
 import timetable.Period;
 import timetable.Subject;
 import timetable.Timetable;
 import timetable.Topic;
 
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by mustarohman on 26/01/2017.
@@ -23,17 +21,21 @@ public class TimetableTest {
     final int breakSize = 15;
     Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
 
-    Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
-    Subject cisSubject = new Subject("CIS", new Topic("RSA", 240, sessionSize), new Topic("DES", 240, sessionSize), new Topic("Diffie Hellman",
-            240, sessionSize), new Topic("Kerberos", 240, sessionSize), new Topic("Block Cipher Modes", 240, sessionSize), new Topic("Modulo", 240, sessionSize),
-            new Topic("Fiat Shamir", 240, sessionSize), new Topic("El-Gamal", 240, sessionSize));
-    Subject insSubject = new Subject("INS" , new Topic("IP", 240, sessionSize), new Topic("TCP", 240, sessionSize), new Topic("HTTP", 240, sessionSize), new Topic("Virtualisation", 240, sessionSize));
-    Subject cslSubject = new Subject("CSL" , new Topic("Logic", 240, sessionSize), new Topic("Trees", 240, sessionSize), new Topic("Logic2", 240, sessionSize),
-            new Topic("Trees2", 240, sessionSize), new Topic("Logic3", 240, sessionSize), new Topic("Trees3", 240, sessionSize),
-            new Topic("Logic4", 240, sessionSize), new Topic("Trees4", 240, sessionSize), new Topic("Logic5", 240, sessionSize), new Topic("Trees5", 240, sessionSize));
-    Subject cflSubject = new Subject("CFL" , new Topic("Rexp", 240, sessionSize), new Topic("Automata", 240, sessionSize), new Topic("Lexing", 240, sessionSize),
-            new Topic("Grammars", 240, sessionSize), new Topic("Interpreter", 240, sessionSize), new Topic("Compiler", 240, sessionSize),
-            new Topic("Functional", 240, sessionSize), new Topic("Optimise", 240, sessionSize));
+    Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, 75);
+    String CIS = "CIS";
+    String INS = "INS";
+    String CSL = "CSL";
+    String CFL = "CFL";
+    Subject cisSubject = new Subject(CIS, new Topic("RSA", CIS, 240, sessionSize), new Topic("DES", CIS, 240, sessionSize), new Topic("Diffie Hellman", CIS,
+            240, sessionSize), new Topic("Kerberos",CIS,  240, sessionSize), new Topic("Block Cipher Modes", CIS, 240, sessionSize), new Topic("Modulo", CIS, 240, sessionSize),
+            new Topic("Fiat Shamir", CIS,  240, sessionSize), new Topic("El-Gamal", CIS, 240, sessionSize));
+    Subject insSubject = new Subject(INS , new Topic("IP", INS, 240, sessionSize), new Topic("TCP", INS, 240, sessionSize), new Topic("HTTP", INS, 240, sessionSize), new Topic("Virtualisation",INS, 240, sessionSize));
+    Subject cslSubject = new Subject(CSL , new Topic("Logic", CSL, 240, sessionSize), new Topic("Trees", CSL, 240, sessionSize), new Topic("Logic2", CSL, 240, sessionSize),
+            new Topic("Trees2", CSL, 240, sessionSize), new Topic("Logic3", CSL, 240, sessionSize), new Topic("Trees3", CSL, 240, sessionSize),
+            new Topic("Logic4", CSL, 240, sessionSize), new Topic("Trees4", CSL, 240, sessionSize), new Topic("Logic5", CSL, 240, sessionSize), new Topic("Trees5", CSL, 240, sessionSize));
+    Subject cflSubject = new Subject(CFL , new Topic("Rexp", CFL, 240, sessionSize), new Topic("Automata", CFL, 240, sessionSize), new Topic("Lexing", CFL, 240, sessionSize),
+            new Topic("Grammars", CFL, 240, sessionSize), new Topic("Interpreter", CFL, 240, sessionSize), new Topic("Compiler", CFL, 240, sessionSize),
+            new Topic("Functional", CFL, 240, sessionSize), new Topic("Optimise", CFL, 240, sessionSize));
 
     @Test
     public void oneSubject() {
@@ -46,6 +48,8 @@ public class TimetableTest {
                 .addExamDate(LocalDate.of(2017, 1, 16))
                 .addBreakDuration(breakSize)
                 .createTimetable();
+        Map<LocalDate, ArrayList<Period>> assignment = timetable.getAssignment();
+        assertNotNull(assignment);
     }
 
     @Test
@@ -55,7 +59,6 @@ public class TimetableTest {
         ArrayList<Subject> subjects = new ArrayList<>();
         subjects.add(cisSubject);
         subjects.add(insSubject);
-        Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
         Timetable timetable = new Timetable.TimetableBuilder()
                 .addSubjects(subjects)
                 .addRewardPeriod(rewardPeriod)
@@ -63,6 +66,8 @@ public class TimetableTest {
                 .addExamDate(LocalDate.of(2017, 1, 16))
                 .addBreakDuration(breakSize)
                 .createTimetable();
+        Map<LocalDate, ArrayList<Period>> assignment = timetable.getAssignment();
+        assertNotNull(assignment);
     }
 
     @Test
@@ -73,7 +78,6 @@ public class TimetableTest {
         subjects.add(insSubject);
         subjects.add(cisSubject);
 
-        Calendar startDateTime = new GregorianCalendar(2016, 11, 15, 9, 0);
         Timetable timetable = new Timetable.TimetableBuilder()
                 .addSubjects(subjects)
                 .addRewardPeriod(rewardPeriod)
@@ -81,6 +85,8 @@ public class TimetableTest {
                 .addExamDate(LocalDate.of(2017, 1, 16))
                 .addBreakDuration(breakSize)
                 .createTimetable();
+        Map<LocalDate, ArrayList<Period>> assignment = timetable.getAssignment();
+        assertNotNull(assignment);
     }
 
     @Test
@@ -100,6 +106,8 @@ public class TimetableTest {
                 .addExamDate(LocalDate.of(2017, 1, 16))
                 .addBreakDuration(breakSize)
                 .createTimetable();
+        Map<LocalDate, ArrayList<Period>> assignment = timetable.getAssignment();
+        assertNotNull(assignment);
     }
 
     @Test
@@ -131,45 +139,24 @@ public class TimetableTest {
     }
 
     @Test
-    public void testNoRepeatPeriod() {
+    public void testWrongDates() {
+        // Test (input of 3 subjects)
+        ArrayList<Subject> subjects = new ArrayList<>();
+        subjects.add(cslSubject);
+        subjects.add(insSubject);
+        subjects.add(cisSubject);
 
+        Timetable timetable = new Timetable.TimetableBuilder()
+                .addSubjects(subjects)
+                .addRewardPeriod(rewardPeriod)
+                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
+                .addExamDate(LocalDate.of(2016, 12, 16))
+                .addBreakDuration(breakSize)
+                .createTimetable();
+        Map<LocalDate, ArrayList<Period>> assignment = timetable.getAssignment();
+        assertNull(assignment);
     }
 
-//    @Test
-//    public void testAddBreakDay() {
-//        ArrayList<Subject> subjects = new ArrayList<>();
-//        subjects.add(cslSubject);
-//        subjects.add(insSubject);
-//        subjects.add(cisSubject);
-//        Timetable timetable = new Timetable.TimetableBuilder()
-//                .addSubjects(subjects)
-//                .addRewardPeriod(rewardPeriod)
-//                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
-//                .addExamDate(LocalDate.of(2017, 10, 17))
-//                .addBreakDuration(breakSize)
-//                .createTimetable();
-//        timetable = Timetable.addBreakDay(LocalDate.of(2016, 12, 16), timetable);
-//        ArrayList<Period> periods = timetable.getAssignment().get(LocalDate.of(2016, 12, 16));
-//        assertEquals(periods.get(0).getType(), Period.PERIOD_TYPE.BREAK_DAY);
-//    }
-
-//    @Test
-//    public void testAddBreakDayOrder() {
-//        ArrayList<Subject> subjects = new ArrayList<>();
-//        subjects.add(cslSubject);
-//        subjects.add(insSubject);
-//        Timetable timetable = new Timetable.TimetableBuilder()
-//                .addSubjects(subjects)
-//                .addRewardPeriod(rewardPeriod)
-//                .addStartDate(LocalDateTime.of(2016, 12, 15, 9, 0))
-//                .addExamDate(LocalDate.of(2016, 12, 16))
-//                .addBreakDuration(breakSize)
-//                .createTimetable();
-//
-//        ArrayList<Period> periods = timetable.getAssignment().get(LocalDate.of(2016, 11, 17));
-//        timetable = Timetable.addBreakDay(LocalDate.of(2016, 11, 16), timetable);
-//        assertEquals(periods, timetable.getAssignment().get(LocalDate.of(2016, 11, 18)));
-//    }
 
     @Test
     public void testOneRewardAddedToEachDay() {

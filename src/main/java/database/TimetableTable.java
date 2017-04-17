@@ -11,11 +11,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import timetable.Period;
+import timetable.Subject;
 import timetable.Timetable;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -80,29 +82,47 @@ public class TimetableTable {
         }
     }
 
-    public static ArrayList<String> getTimetableList(DynamoDB dynamoDB, String userId) {
-        Table table = dynamoDB.getTable(TABLE_NAME);
-        // Query table with user id for all timetables
-        QuerySpec spec = new QuerySpec()
-                .withKeyConditionExpression(USER_ID_ATTR + "= :v_id")
-                .withValueMap(new ValueMap()
-                        .withString(":v_id", userId));
-
-        ItemCollection<QueryOutcome> items = table.query(spec);
-        ArrayList<String> list = new ArrayList<>();
-
-        Iterator<Item> iterator = items.iterator();
-        Item item = null;
-        while (iterator.hasNext()) {
-            item = iterator.next();
-            list.add(item.getString(NAME_ATTR));
+    public static Period getTaskAtTimeAndDate(DynamoDB dynamoDB, String userId, LocalDate localDate, LocalTime localTime) {
+        Map<LocalDate, ArrayList<Period>> assignment = getTimetableAssignment(dynamoDB, userId);
+        ArrayList<Period> dayPeriods = assignment.get(localDate);
+        if (dayPeriods == null) {
+            return null;
         }
-        return list;
+
+        Period task = null;
+        for (Period period: dayPeriods) {
+
+            LocalTime periodTime = period.getDateTime().toLocalTime();
+
+            System.out.println("Input time: " + localTime.toString());
+            LocalTime beginningTime = period.getDateTime().toLocalTime();
+            System.out.println("Beginning time: " + beginningTime.toString());
+            LocalTime endingTime = beginningTime.plusMinutes(period.getPeriodDuration());
+            System.out.println("End time: " + endingTime.toString());
+            if (periodTime.equals(localTime) || (localTime.isAfter(beginningTime) && localTime.isBefore(endingTime))) {
+                task = period;
+            }
+        }
+        return task;
     }
 
+    public static ArrayList<String> getSubjectsList(DynamoDB dynamoDB, String userId) {
+        Item item = getItem(dynamoDB, userId);
+        String json = item.getJSON(SUBJECTS_ATTR);
+        if (json == null) {
+            return null;
+        }
+        Type type = new TypeToken<ArrayList<Subject>>(){}.getType();
+        ArrayList<Subject> subjects = gson.fromJson(json, type);
+
+        ArrayList<String> subjectList = new ArrayList<>();
+        for (Subject subject: subjects) {
+            subjectList.add(subject.getName());
+        }
+        return subjectList;
+    }
 
     public static Map<LocalDate, ArrayList<Period>> getTimetableAssignment(DynamoDB dynamoDB, String userId) {
-        Table table = dynamoDB.getTable(TABLE_NAME);
         Item item = getItem(dynamoDB, userId);
         String json = item.getJSON(ASSIGNMENT_ATTR);
         if (json == null) {
@@ -146,32 +166,32 @@ public class TimetableTable {
 
     }
 
-    public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {
-        Table table = dynamoDB.getTable(TABLE_NAME);
-        Item item = table.getItem(USER_ID_ATTR, userId);
-
-        String json = item.getJSON(ASSIGNMENT_ATTR);
-        Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
-        Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(json, type);
-
-        LocalDate revisionEndDate = gson.fromJson(item.getJSON(REVISION_END_DATE_ATTR), LocalDate.class);
-        revisionEndDate = revisionEndDate.plusDays(1);
-
-        long freeDays = item.getLong(SPARE_DAYS_ATTR);
-
-        ArrayList<Period> extraRevisionDay = new ArrayList<>();
-        extraRevisionDay.add(new Period(Period.PERIOD_TYPE.EXTRA_REVISION_DAY, subject, 0, 1500));
-        assignment.put(revisionEndDate, extraRevisionDay);
-        freeDays--;
-
-        boolean success = updateTimetableAssignment(table, item, userId, freeDays, revisionEndDate, assignment);
-
-        if (success) {
-            return assignment;
-        } else {
-            return null;
-        }
-    }
+//    public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {
+//        Table table = dynamoDB.getTable(TABLE_NAME);
+//        Item item = table.getItem(USER_ID_ATTR, userId);
+//
+//        String json = item.getJSON(ASSIGNMENT_ATTR);
+//        Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
+//        Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(json, type);
+//
+//        LocalDate revisionEndDate = gson.fromJson(item.getJSON(REVISION_END_DATE_ATTR), LocalDate.class);
+//        revisionEndDate = revisionEndDate.plusDays(1);
+//
+//        long freeDays = item.getLong(SPARE_DAYS_ATTR);
+//
+//        ArrayList<Period> extraRevisionDay = new ArrayList<>();
+//        extraRevisionDay.add(new Period(Period.PERIOD_TYPE.EXTRA_REVISION_DAY, null,subject, 0, 1500));
+//        assignment.put(revisionEndDate, extraRevisionDay);
+//        freeDays--;
+//
+//        boolean success = updateTimetableAssignment(table, item, userId, freeDays, revisionEndDate, assignment);
+//
+//        if (success) {
+//            return assignment;
+//        } else {
+//            return null;
+//        }
+//    }
 
     public static  Map<LocalDate, ArrayList<Period>> addBreakDay(DynamoDB dynamoDB, String userId, LocalDate breakDate) {
         Table table = dynamoDB.getTable(TABLE_NAME);
@@ -184,7 +204,9 @@ public class TimetableTable {
             return null;
         }
         ArrayList<Period> breakDay = new ArrayList<>();
-        breakDay.add(new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500));
+        Period breakDayPeriod = new Period(Period.PERIOD_TYPE.BREAK_DAY, null, null, 0, 1500);
+        breakDayPeriod.setDateTime(breakDate.atTime(LocalTime.of(9, 0)));
+        breakDay.add(breakDayPeriod);
         ArrayList<Period> periods = assignment.replace(breakDate, breakDay);
         assignment.put(revisionEndDate.plusDays(1), null);
         LocalDate date = breakDate.plusDays(1);

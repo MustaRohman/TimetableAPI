@@ -45,11 +45,7 @@ public class UserTable {
 
     public static Item addItem(DynamoDB dynamoDB, String userId) {
         Table table = dynamoDB.getTable(TABLE_NAME);
-//        String count = String.valueOf(table.getDescription().getItemCount() + 1);
-//        String code = BCrypt.hashpw(count, BCrypt.gensalt(4));
-        String code = UUID.randomUUID().toString();
-        code = code.substring(0,13);
-        System.out.println(code);
+        String code = UUID.randomUUID().toString().substring(0,10);
         QuerySpec spec = new QuerySpec()
                 .withKeyConditionExpression(CODE_ATTR + "= :v_id")
                 .withValueMap(new ValueMap()
@@ -58,23 +54,20 @@ public class UserTable {
         ItemCollection<QueryOutcome> items = table.query(spec);
         while (items.getAccumulatedScannedCount() > 0) {
             System.out.println("Regenerating code...");
-            code = UUID.randomUUID().toString().substring(0,13);
-            System.out.println(code);
+            code = UUID.randomUUID().toString().substring(0,10);
             items = table.query(spec);
         }
         try {
             System.out.println("Adding a new item...");
-            PutItemOutcome outcome = table.putItem(new Item()
+            table.putItem(new Item()
                     .withPrimaryKey(USER_ID_ATTR, userId)
                     .withString(CODE_ATTR, code)
             );
 
-            System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
             return table.getItem(USER_ID_ATTR, userId);
 
         } catch (Exception e) {
             System.err.println("Unable to add item: " + " id: " + userId);
-            System.err.println(e.getMessage());
             return null;
         }
     }

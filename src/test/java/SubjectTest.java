@@ -13,8 +13,8 @@ import static org.junit.Assert.assertFalse;
  * Created by mustarohman on 27/01/2017.
  */
 public class SubjectTest {
-    Subject subject = new Subject("CSL" , new Topic("Logic", 300, 45), new Topic("Trees", 300, 45));
-    Subject subject2 = new Subject("CSL" , new Topic("Logic", 300, 45), new Topic("Trees", 360, 45));
+    Subject subject = new Subject("CSL" , new Topic("Logic", "CSL",  300, 45), new Topic("Trees", "CSL", 300, 45));
+    Subject subject2 = new Subject("CSL" , new Topic("Logic", "CSL", 300, 45), new Topic("Trees", "CSL", 360, 45));
 
     @Test
     public void testGetPeriods() {

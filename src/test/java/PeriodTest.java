@@ -14,12 +14,12 @@ import static org.junit.Assert.*;
  * Created by mustarohman on 27/01/2017.
  */
 public class PeriodTest {
-    final int sessionSize = 45;
-    private Topic topic =  new Topic("Logic", 240, sessionSize);
-    private Period period = new Period(Period.PERIOD_TYPE.SUBJECT, topic.getName() ,3, sessionSize);
-    private Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null ,0, 15);
-    private Period breakDay = new Period(Period.PERIOD_TYPE.BREAK_DAY, null, 0, 1500);
-    private Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, 75);
+    private final int sessionSize = 45;
+    private Topic topic =  new Topic("Logic", "Subject", 240, sessionSize);
+    private Period period = new Period(Period.PERIOD_TYPE.SUBJECT, topic.getName(), "Subject" ,3, sessionSize);
+    private Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, null,0, 15);
+    private Period breakDay = new Period(Period.PERIOD_TYPE.BREAK_DAY, null, null, 0, 1500);
+    private Period rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, 75);
 
     @Test
     public void testSetDateTime() {

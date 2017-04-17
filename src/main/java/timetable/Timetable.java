@@ -3,6 +3,7 @@ package timetable;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.WeekFields;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -39,7 +40,7 @@ public class Timetable {
         int subjectCounter = 0;
         // Total of periods assigned for each subject
         int[] totalSubPeriodsAssigned = new int[subjects.size()];
-        int totalPeriods = getTotalPeriods();
+        int totalNumberOfPeriods = getTotalNumberOfPeriods();
         boolean rewardTaken = false;
         int endHour = 21;
 
@@ -48,7 +49,7 @@ public class Timetable {
         ArrayList<Period> periodsForDay = new ArrayList<>();
 //        List of all periods ordered by the timetable assignment
 
-        for (int i = 0; i < totalPeriods; i++) {
+        for (int i = 0; i < totalNumberOfPeriods; i++) {
             Subject currentSubject = subjects.get(subjectCounter);
             while (totalSubPeriodsAssigned[subjectCounter] >= currentSubject.getPeriods().size()) {
                 subjectCounter = (subjectCounter + 1) % (subjects.size());
@@ -68,14 +69,14 @@ public class Timetable {
                 currentDateTime = incrementDay(currentDateTime);
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
-            } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalPeriods - 1) {
-                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, 0, rewardPeriod.getPeriodDuration());
+            } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalNumberOfPeriods - 1) {
+                rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, rewardPeriod.getPeriodDuration());
                 rewardPeriod.setDateTime(currentDateTime);
                 periodsForDay.add(rewardPeriod);
                 currentDateTime = currentDateTime.plusMinutes(60);
                 rewardTaken = true;
-            } else if (i != totalPeriods - 1) {
-                Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, 0, breakSize);
+            } else if (i != totalNumberOfPeriods - 1) {
+                Period breakPeriod = new Period(Period.PERIOD_TYPE.BREAK, null, null, 0, breakSize);
                 breakPeriod.setDateTime(currentDateTime);
                 periodsForDay.add(breakPeriod);
                 currentDateTime = currentDateTime.plusMinutes(breakSize);
@@ -86,10 +87,13 @@ public class Timetable {
         }
         revisionEndDate = currentDateTime.toLocalDate();
         extraDays = calculateSpareDays(revisionEndDate, examStartDate);
+        if (extraDays <= 0) {
+            return null;
+        }
         return assignment;
     }
 
-    private int getTotalPeriods() {
+    private int getTotalNumberOfPeriods() {
         int total = 0;
         for (Subject subject : subjects) {
             total += subject.getPeriods().size();
@@ -107,6 +111,43 @@ public class Timetable {
 
     private long calculateSpareDays(LocalDate revisionEndDate, LocalDate examStartDate){
         return DAYS.between(revisionEndDate, examStartDate);
+    }
+
+    public static ArrayList<String> getAgendaForWeek(Map<LocalDate, ArrayList<Period>> assignment, String weekNumber, boolean isWeekend) {
+        String[] split = weekNumber.split("-");
+        int year = Integer.parseInt(split[0]);
+        int week = Integer.parseInt(split[1].substring(1));
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        LocalDate ldt = LocalDate.now()
+                .withYear(year)
+                .with(weekFields.weekOfYear(), week)
+                .with(weekFields.dayOfWeek(), (isWeekend) ? 6 : 1);
+        ArrayList<String> topicsAgenda = new ArrayList<>();
+        for (int i = 0; i < ((isWeekend) ? 2 : 7); i++) {
+            System.out.println(ldt.getDayOfWeek());
+            ArrayList<String> dayAgenda = getAgendaForDay(assignment, ldt);
+            if (dayAgenda != null) {
+                topicsAgenda.addAll(dayAgenda);
+            }
+            ldt = ldt.plusDays(1);
+        }
+        return topicsAgenda;
+    }
+
+
+    public static ArrayList<String> getAgendaForDay(Map<LocalDate, ArrayList<Period>> assignment, LocalDate date) {
+        ArrayList<Period> periodsForDay = assignment.get(date);
+        ArrayList<String> topicsAgenda = new ArrayList<>();
+        if (periodsForDay == null || periodsForDay.isEmpty()) {
+            return null;
+        }
+
+        for (Period period: periodsForDay) {
+            if (!topicsAgenda.contains(period.getTopicName()) && period.getTopicName() != null) {
+                topicsAgenda.add(period.getTopicName());
+            }
+        }
+        return topicsAgenda;
     }
 
     public long getExtraDays() {
@@ -147,22 +188,6 @@ public class Timetable {
 
     public String getName() {
         return name;
-    }
-
-    public void setExamStartDate(LocalDate examStartDate) {
-        this.examStartDate = examStartDate;
-    }
-
-    public void setRevisionEndDate(LocalDate revisionEndDate) {
-        this.revisionEndDate = revisionEndDate;
-    }
-
-    public void setExtraDays(long extraDays) {
-        this.extraDays = extraDays;
-    }
-
-    public void setTimetableAssignment(Map<LocalDate, ArrayList<Period>> timetableAssignment) {
-        this.timetableAssignment = timetableAssignment;
     }
 
     public static class TimetableBuilder {

@@ -7,10 +7,12 @@ import java.util.ArrayList;
  */
 public class Topic {
     private String name;
+    private String subjectName;
     private ArrayList<Period> periods;
 
-    public Topic(String name, int topicDuration, int sessionDuration){
+    public Topic(String name, String subjectName,  int topicDuration, int sessionDuration){
         this.name = name;
+        this.subjectName = subjectName;
         generatePeriods(topicDuration, sessionDuration);
     }
 
@@ -18,7 +20,7 @@ public class Topic {
         this.periods = new ArrayList<>();
         int numOfPeriods = (int) Math.ceil((double)topicDuration / sessionDuration);
         for (int i = 0; i < numOfPeriods; i++ ) {
-            this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, name, i, sessionDuration));
+            this.periods.add(new Period(Period.PERIOD_TYPE.SUBJECT, name, subjectName, i, sessionDuration));
         }
     }
 

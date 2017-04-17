@@ -131,6 +131,10 @@ public class Timetable {
             }
             ldt = ldt.plusDays(1);
         }
+        Set<String> set = new HashSet<>();
+        set.addAll(topicsAgenda);
+        topicsAgenda.clear();
+        topicsAgenda.addAll(set);
         return topicsAgenda;
     }
 

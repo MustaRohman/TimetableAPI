@@ -258,6 +258,7 @@ public class Main {
                 res.status(400);
                 return res.status();
             }
+            DBTable.createTable(dynamoDB, UserTable.TABLE_NAME);
             Item item = UserTable.getItem(dynamoDB, userId);
             if (item != null) {
                 System.out.println("Item already exists");

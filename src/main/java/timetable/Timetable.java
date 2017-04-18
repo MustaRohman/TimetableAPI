@@ -8,10 +8,6 @@ import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-/**
- * Created by mustarohman on 13/12/2016.
- */
-
 public class Timetable {
 
     private transient ArrayList<Subject> subjects;
@@ -70,6 +66,7 @@ public class Timetable {
                 periodsForDay = new ArrayList<>();
                 rewardTaken = false;
             } else if(currentDateTime.getHour() >= (13) && !rewardTaken && i != totalNumberOfPeriods - 1) {
+                System.out.println("Added reward: " + rewardPeriod.getPeriodDuration());
                 rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, rewardPeriod.getPeriodDuration());
                 rewardPeriod.setDateTime(currentDateTime);
                 periodsForDay.add(rewardPeriod);

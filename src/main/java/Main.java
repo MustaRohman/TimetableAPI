@@ -353,6 +353,7 @@ public class Main {
                 sessionDuration = configJsonObj.get("session-duration").getAsInt();
                 breakDuration = configJsonObj.get("break-duration").getAsInt();
                 JsonObject rewardJsonObj = configJsonObj.getAsJsonObject("reward");
+                System.out.println("reward duration: " + rewardJsonObj.get("duration"));
                 rewardPeriod = new Period(Period.PERIOD_TYPE.REWARD, null, null, 0, rewardJsonObj.get("duration").getAsInt());
             } else {
                 return null;

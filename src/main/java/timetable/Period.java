@@ -4,9 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.StringJoiner;
 
-/**
- * Created by mustarohman on 08/12/2016.
- */
 public class Period {
 
     public enum PERIOD_TYPE {

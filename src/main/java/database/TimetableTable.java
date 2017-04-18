@@ -25,9 +25,8 @@ import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-/**
- * Created by mustarohman on 18/03/2017.
- */
+//Based on code from dynamo-db sdk examples http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html
+
 public class TimetableTable {
 
     public final static String TABLE_NAME = "Timetables";
@@ -44,16 +43,11 @@ public class TimetableTable {
 
     static final Gson gson = Converters.registerLocalDate(new GsonBuilder()).create();
 
-
-
-
     public static Item getItem(DynamoDB dynamoDB, String userId) {
         Table table = dynamoDB.getTable(TABLE_NAME);
         Item item = table.getItem(USER_ID_ATTR, userId);
         return item;
     }
-
-
 
     public static Item addItem(DynamoDB dynamoDB, String userId, Timetable timetable) {
         Table table = dynamoDB.getTable("Timetables");
@@ -165,33 +159,6 @@ public class TimetableTable {
         return (examStartDate == null) ? null : DAYS.between(currentDate, examStartDate);
 
     }
-
-//    public static Map<LocalDate,ArrayList<Period>> assignExtraRevisionDay(DynamoDB dynamoDB, String userId, String subject) {
-//        Table table = dynamoDB.getTable(TABLE_NAME);
-//        Item item = table.getItem(USER_ID_ATTR, userId);
-//
-//        String json = item.getJSON(ASSIGNMENT_ATTR);
-//        Type type = new TypeToken<Map<LocalDate, ArrayList<Period>>>(){}.getType();
-//        Map<LocalDate, ArrayList<Period>> assignment = gson.fromJson(json, type);
-//
-//        LocalDate revisionEndDate = gson.fromJson(item.getJSON(REVISION_END_DATE_ATTR), LocalDate.class);
-//        revisionEndDate = revisionEndDate.plusDays(1);
-//
-//        long freeDays = item.getLong(SPARE_DAYS_ATTR);
-//
-//        ArrayList<Period> extraRevisionDay = new ArrayList<>();
-//        extraRevisionDay.add(new Period(Period.PERIOD_TYPE.EXTRA_REVISION_DAY, null,subject, 0, 1500));
-//        assignment.put(revisionEndDate, extraRevisionDay);
-//        freeDays--;
-//
-//        boolean success = updateTimetableAssignment(table, item, userId, freeDays, revisionEndDate, assignment);
-//
-//        if (success) {
-//            return assignment;
-//        } else {
-//            return null;
-//        }
-//    }
 
     public static  Map<LocalDate, ArrayList<Period>> addBreakDay(DynamoDB dynamoDB, String userId, LocalDate breakDate) {
         Table table = dynamoDB.getTable(TABLE_NAME);

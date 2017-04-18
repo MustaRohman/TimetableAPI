@@ -48,18 +48,6 @@ public class Main {
 
         get("/", (req, res) -> "Welcome to the StudyFriend Timetable API");
 
-        get("/subjects", (req, res) -> {
-            String userId = req.headers("UserId");
-            ArrayList<String> subjectList = TimetableTable.getSubjectsList(dynamoDB, userId);
-            if (subjectList == null) {
-                System.out.println("No timetable data under UserId");
-                res.status(400);
-                return "No timetable data under UserId";
-            }
-            res.type("application/json");
-            return gson.toJson(subjectList);
-        });
-
         get("/task/:date/:time", (req, res) -> {
             String userId = req.headers("UserId");
             LocalDate date = LocalDate.parse(req.params("date"));
@@ -146,10 +134,6 @@ public class Main {
             }
         });
 
-        get("/progress/subject/:subject", (req, res) -> {
-            String userId = req.headers("UserId");
-            return null;
-        });
 
         get("/progress/revision/:date", (req, res) -> {
             String userId = req.headers("UserId");
@@ -180,18 +164,6 @@ public class Main {
             } else {
                 System.out.println(ldt.toString());
                 return ldt.toString();
-            }
-        });
-
-        get("/days-until-exam/:date", (req, res) -> {
-            String userId = req.headers("UserId");
-            LocalDate ldt = LocalDate.parse(req.params("date"));
-            Long days = TimetableTable.getDaysUntilExamStart(dynamoDB, userId, ldt);
-            if (days == null) {
-                res.status(400);
-                return "No timetable data under UserId";
-            } else {
-                return days;
             }
         });
 
@@ -240,7 +212,7 @@ public class Main {
                 res.status(400);
                 return "Revision start date and Exam start date are too close.";
             }
-//            TimetableTable.deleteTimetablesTable(dynamoDB);
+
             Table table = DBTable.createTable(dynamoDB, TimetableTable.TABLE_NAME);
             Item item = null;
             if (table != null) {
@@ -295,29 +267,6 @@ public class Main {
             res.status(400);
             return "Unable to add break day";
         }) ;
-
-//        post("/extra/:subject", (req, res) -> {
-//            // Assign extra day to a particular subject/topic
-//            String userId = req.headers("UserId");
-//            String subject = req.params("subject");
-//            Integer freeDays = TimetableTable.getFreeDays(dynamoDB, userId);
-//            if (freeDays == null) {
-//                res.status(400);
-//                return "No timetable under UserId";
-//            }
-//            if (freeDays <= 0) {
-//                res.status(400);
-//                return "No spare days left";
-//            }
-//            Map<LocalDate, ArrayList<Period>> assignment = TimetableTable.assignExtraRevisionDay(dynamoDB, userId, subject);
-//            if (assignment == null) {
-//                res.status(400);
-//                return "Unable to assign extra revision day";
-//            }
-//            res.type("application/json");
-//            return gson.toJson(assignment);
-//        });
-
     }
 
 

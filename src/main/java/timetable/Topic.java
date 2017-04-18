@@ -2,9 +2,6 @@ package timetable;
 
 import java.util.ArrayList;
 
-/**
- * Created by mustarohman on 08/12/2016.
- */
 public class Topic {
     private String name;
     private String subjectName;

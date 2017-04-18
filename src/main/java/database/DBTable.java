@@ -6,9 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.*;
 
 import java.util.Arrays;
 
-/**
- * Created by mustarohman on 04/04/2017.
- */
+//Based on code from dynamo-db sdk examples http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html
 public class DBTable {
 
     public static Table createTable(DynamoDB dynamoDB, String tableName) {
@@ -33,17 +31,6 @@ public class DBTable {
                 return table;
             }
             return null;
-        }
-    }
-
-    public static void deleteTable(DynamoDB dynamoDB, String tableName) {
-        Table table = dynamoDB.getTable(tableName);
-        try {
-            table.delete();
-            table.waitForDelete();
-        } catch (InterruptedException e) {
-            System.out.println("Unable to delete Timetables table");
-            e.printStackTrace();
         }
     }
 }

@@ -11,9 +11,8 @@ import timetable.Timetable;
 import java.util.Arrays;
 import java.util.UUID;
 
-/**
- * Created by mustarohman on 04/04/2017.
- */
+//Based on code from dynamo-db sdk examples http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html
+
 public class UserTable {
 
     public final static String TABLE_NAME = "Users";
